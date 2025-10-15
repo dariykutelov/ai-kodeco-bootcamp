@@ -16,11 +16,12 @@ struct HomeView: View {
     
     var body: some View {
         VStack {
-            if let image = viewModel.selectedOrCapturedImage {
+            if let image = viewModel.drawFaceLandmarks() {
               Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 300, height: 300)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
             } else {
               Text("No image selected")
             }
@@ -55,6 +56,14 @@ struct HomeView: View {
                     }
                 }
             }
+            
+            Button {
+                viewModel.detectFaces()
+            } label: {
+                Text("Draw Landmarks")
+            }
+            .buttonStyle(.borderedProminent)
+            .padding()
             
             Text(permissionMessage)
               .padding()
