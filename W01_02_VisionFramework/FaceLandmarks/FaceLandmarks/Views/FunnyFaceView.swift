@@ -9,43 +9,50 @@ import SwiftUI
 import AVFoundation
 import PhotosUI
 
-struct HomeView: View {
-    @State private var viewModel = HomeViewModel()
+struct FunnyFaceView: View {
+    @State private var viewModel = FunnyFaceViewModel()
     
     @State private var showCameraPicker = false
     
     var body: some View {
         VStack {
-            if let image = viewModel.drawFaceLandmarks() {
+            if let image = viewModel.selectedOrCapturedImage?
+                .drawGooglyEyes(landmarks: viewModel.faceLandmarks,
+                                boundingBox: viewModel.faceBoundingBox) {
               Image(uiImage: image)
                 .resizable()
-                .scaledToFit()
                 .frame(maxWidth: .infinity)
+                .scaledToFit()
                 .padding(.horizontal, 16)
             } else {
               Text("No image selected")
             }
             
+            Spacer()
+            
             VStack {
-                Text("Select an image")
-                    .font(.title)
                 HStack {
-                    PhotosPicker(
-                        selection: $viewModel.selectedPickerItem,
-                        matching: .images,
-                        photoLibrary: .shared()
-                    ) {
-                        Image(systemName: "photo.fill")
-                            .font(Font.largeTitle.bold())
-                            .padding(8)
+                    Button {
+                        viewModel.reset()
+                    } label: {
+                        PhotosPicker(
+                            selection: $viewModel.selectedPickerItem,
+                            matching: .images,
+                            photoLibrary: .shared()
+                        ) {
+                            Image(systemName: "photo.fill")
+                                .font(Font.largeTitle.bold())
+                                .padding(8)
+                        }
                     }
                     
                     Button {
                         switch viewModel.cameraPermissionStatus {
                         case .authorized:
-                          showCameraPicker = true
+                            viewModel.reset()
+                            showCameraPicker = true
                         case .notDetermined:
-                          viewModel.requestCameraPermissions()
+                            viewModel.requestCameraPermissions()
                         default:
                           break
                         }
@@ -58,15 +65,24 @@ struct HomeView: View {
             }
             
             Button {
-                viewModel.detectFaces()
+                viewModel.detectFace()
             } label: {
-                Text("Draw Landmarks")
+                Text("Funny face!")
             }
             .buttonStyle(.borderedProminent)
             .padding()
             
             Text(permissionMessage)
               .padding()
+            
+            if let errorMessage = viewModel.errorMessage {
+              Text(errorMessage)
+                .foregroundColor(.red)
+                .padding()
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(8)
+                .padding(.horizontal)
+            }
         }
         .sheet(isPresented: $showCameraPicker) {
           CameraPicker(selectedImage: $viewModel.selectedOrCapturedImage)
@@ -76,7 +92,7 @@ struct HomeView: View {
     private var permissionMessage: String {
       switch viewModel.cameraPermissionStatus {
       case .authorized:
-        return "Camera permission granted."
+        return ""
       case .denied, .restricted:
         return "Camera permission denied. Please go to Settings to enable it."
       case .notDetermined:
@@ -88,5 +104,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    FunnyFaceView()
 }

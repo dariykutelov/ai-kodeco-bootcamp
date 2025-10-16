@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-          HomeView()
+          FunnyFaceView()
             .tabItem {
               Label("Face Effects", systemImage: "photo.on.rectangle")
             }
