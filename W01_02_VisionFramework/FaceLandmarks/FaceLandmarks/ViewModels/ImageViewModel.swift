@@ -12,7 +12,7 @@ import PhotosUI
 import Vision
 
 @Observable
-class FunnyFaceViewModel {
+class ImageViewModel {
     
     // MARK: - Properties
     
@@ -25,6 +25,11 @@ class FunnyFaceViewModel {
     }
     
     var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
+    var faceObservations: [VNFaceObservation] = []
+    var faceBoundingBox: CGRect? = nil
+    var faceLandmarks: VNFaceLandmarks2D? = nil
+    var errorMessage: String? = nil
+    
     var selectedPickerItem: PhotosPickerItem? {
         didSet {
             if let item = selectedPickerItem {
@@ -32,88 +37,81 @@ class FunnyFaceViewModel {
             }
         }
     }
-    var faceObservations: [VNFaceObservation] = []
-    var faceReactangle: CGRect? = nil
-    var faceBoundingBox: CGRect? = nil
-    var faceLandmarks: VNFaceLandmarks2D? = nil
-    var errorMessage: String? = nil
-    var leftEyeHorizontalSizeIncrease: CGFloat = 1.0
     
     // MARK: - init
     
     init() {
-      checkCameraPermissions()
+        checkCameraPermissions()
     }
     
     //MARK: - Camera Permissions
     
     func checkCameraPermissions() {
-      let status = AVCaptureDevice.authorizationStatus(for: .video)
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
         
-      DispatchQueue.main.async {
-        self.cameraPermissionStatus = status
-      }
+        DispatchQueue.main.async {
+            self.cameraPermissionStatus = status
+        }
     }
     
     func requestCameraPermissions() {
-      AVCaptureDevice.requestAccess(for: .video) { granted in
-        self.checkCameraPermissions()
-      }
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            self.checkCameraPermissions()
+        }
     }
     
     //MARK: - Photo Picker
     private func loadImage(from item: PhotosPickerItem) {
-      item.loadTransferable(type: Data.self) { result in
-        DispatchQueue.main.async {
-          switch result {
-          case .success(let data):
-            if let data = data, let uiImage = UIImage(data: data) {
-              self.selectedOrCapturedImage = uiImage
-            } else {
-              print("Failed to convert data to UIImage")
+        item.loadTransferable(type: Data.self) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data):
+                    if let data = data, let uiImage = UIImage(data: data) {
+                        self.selectedOrCapturedImage = uiImage
+                    } else {
+                        print("Failed to convert data to UIImage")
+                    }
+                case .failure(let error):
+                    print("Error loading image: \(error)")
+                }
             }
-          case .failure(let error):
-            print("Error loading image: \(error)")
-          }
         }
-      }
     }
     
     //MARK: - Helper Functions
     func reset() {
-      faceObservations = []
-      faceReactangle = nil
-      faceBoundingBox = nil
-      faceLandmarks = nil
-      errorMessage = nil
+        faceObservations = []
+        faceBoundingBox = nil
+        faceLandmarks = nil
+        errorMessage = nil
     }
 }
 
 
 //MARK: - Face Detection
 
-extension FunnyFaceViewModel {
+extension ImageViewModel {
     @MainActor func detectFace() {
         self.reset()
         
         guard let image = selectedOrCapturedImage else {
             DispatchQueue.main.async {
                 self.errorMessage = "No image available"
-        }
+            }
             return
         }
         
         guard let cgImage = image.cgImage else {
             DispatchQueue.main.async {
                 self.errorMessage = "Failed to convert UIImage to CGImage"
-        }
+            }
             return
         }
         
         let faceDetectionRequest = VNDetectFaceLandmarksRequest {  [weak self] request, error in
             if let error = error {
                 DispatchQueue.main.async {
-                  self?.errorMessage = "Face detection error: \(error.localizedDescription)"
+                    self?.errorMessage = "Face detection error: \(error.localizedDescription)"
                 }
                 return
             }
@@ -131,13 +129,13 @@ extension FunnyFaceViewModel {
                 self?.errorMessage = observations.isEmpty ? "No faces detected" : nil
             }
         }
-
+        
 #if targetEnvironment(simulator)
-      faceDetectionRequest.usesCPUOnly = true
+        faceDetectionRequest.usesCPUOnly = true
 #endif
-          
+        
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-          
+        
         do {
             try handler.perform([faceDetectionRequest])
         } catch {
