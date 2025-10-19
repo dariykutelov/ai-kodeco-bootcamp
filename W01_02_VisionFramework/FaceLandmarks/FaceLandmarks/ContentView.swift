@@ -10,6 +10,11 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
+            SunglassesView()
+                .tabItem {
+                    Label("Sun Glasses", systemImage: "sunglasses.fill")
+                }
+            
             FunnyFaceView()
                 .tabItem {
                     Label("Face Effects", systemImage: "photo.on.rectangle")
@@ -18,11 +23,6 @@ struct ContentView: View {
             StreamFromCameraView()
                 .tabItem {
                     Label("Camera", systemImage: "video.fill")
-                }
-            
-            SunglassesView()
-                .tabItem {
-                    Label("Sun Glasses", systemImage: "sunglasses.fill")
                 }
         }
     }

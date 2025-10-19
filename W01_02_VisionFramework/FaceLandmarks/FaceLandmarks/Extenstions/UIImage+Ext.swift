@@ -11,27 +11,27 @@ import OSLog
 
 extension UIImage {
     
-    // MARK: - Google Eyes
+    // MARK: - Draw Google Eyes
     
     func drawGooglyEyes(landmarks: VNFaceLandmarks2D?, boundingBox: CGRect?) -> UIImage? {
-        
-        guard let cgImage = self.cgImage else {
-            return nil
-        }
-        
+    
+    guard let cgImage = self.cgImage else {
+      return nil
+    }
+    
         guard let landmarks = landmarks, let boundingBox = boundingBox else {
-            return self
-        }
-        
-        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
-        UIGraphicsBeginImageContextWithOptions(imageSize, false, self.scale)
-        
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return nil
-        }
-        
-        context.draw(cgImage, in: CGRect(origin: .zero, size: imageSize))
-        
+      return self
+    }
+    
+    let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+    UIGraphicsBeginImageContextWithOptions(imageSize, false, self.scale)
+    
+    guard let context = UIGraphicsGetCurrentContext() else {
+      return nil
+    }
+    
+    context.draw(cgImage, in: CGRect(origin: .zero, size: imageSize))
+    
         if let leftEye = landmarks.leftEye {
             drawGooglyEye(eye: leftEye, boundingBox: boundingBox, imageSize: imageSize, context: context, isLeftEye: true)
         }
@@ -40,20 +40,20 @@ extension UIImage {
             drawGooglyEye(eye: rightEye, boundingBox: boundingBox, imageSize: imageSize, context: context, isLeftEye: false)
         }
         
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        guard let finalCgImage = newImage?.cgImage else {
-            return nil
-        }
-        
-        let correctlyOrientedImage = UIImage(
-            cgImage: finalCgImage,
-            scale: self.scale,
-            orientation: self.adjustOrientation()
-        )
-        return correctlyOrientedImage
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    
+    guard let finalCgImage = newImage?.cgImage else {
+      return nil
     }
+    
+    let correctlyOrientedImage = UIImage(
+      cgImage: finalCgImage,
+      scale: self.scale,
+      orientation: self.adjustOrientation()
+    )
+    return correctlyOrientedImage
+  }
     
     private func drawGooglyEye(eye: VNFaceLandmarkRegion2D, boundingBox: CGRect, imageSize: CGSize, context: CGContext, isLeftEye: Bool) {
         let points = eye.normalizedPoints
@@ -162,29 +162,31 @@ extension UIImage {
         blackCirclePath.fill()
     }
     
+    
     // MARK: - Sunglasses Overlay
 
     func addSunglassesOverlay(landmarks: VNFaceLandmarks2D?,
                               boundingBox: CGRect?,
-                              sunglassesImage: UIImage?) -> UIImage? {
-        
-        guard let cgImage = self.cgImage else {
-            return nil
-        }
-        
+                              sunglassesImage: UIImage?,
+                              verticalTopToNoseOffset: CGFloat) -> UIImage? {
+      
+      guard let cgImage = self.cgImage else {
+        return nil
+      }
+      
         guard let landmarks = landmarks, let boundingBox = boundingBox, let sunglassesImage = sunglassesImage else {
-            return self
-        }
-        
-        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
-        UIGraphicsBeginImageContextWithOptions(imageSize, false, self.scale)
-        
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return nil
-        }
-        
-        context.draw(cgImage, in: CGRect(origin: .zero, size: imageSize))
-        
+        return self
+      }
+      
+      let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+      UIGraphicsBeginImageContextWithOptions(imageSize, false, self.scale)
+      
+      guard let context = UIGraphicsGetCurrentContext() else {
+        return nil
+      }
+      
+      context.draw(cgImage, in: CGRect(origin: .zero, size: imageSize))
+      
         if let leftEye = landmarks.leftEye, let rightEye = landmarks.rightEye {
             drawSunglassesOverlay(leftEye: leftEye,
                                   rightEye: rightEye,
@@ -192,89 +194,78 @@ extension UIImage {
                                   boundingBox: boundingBox,
                                   imageSize: imageSize,
                                   context: context,
-                                  sunglassesImage: sunglassesImage)
+                                  sunglassesImage: sunglassesImage,
+                                  verticalTopToNoseOffset: verticalTopToNoseOffset)
         }
         
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        guard let finalCgImage = newImage?.cgImage else {
-            return nil
-        }
-        
-        let correctlyOrientedImage = UIImage(
-            cgImage: finalCgImage,
-            scale: self.scale,
-            orientation: self.adjustOrientation()
-        )
-        return correctlyOrientedImage
+      let newImage = UIGraphicsGetImageFromCurrentImageContext()
+      UIGraphicsEndImageContext()
+      
+      guard let finalCgImage = newImage?.cgImage else {
+        return nil
+      }
+      
+      let correctlyOrientedImage = UIImage(
+        cgImage: finalCgImage,
+        scale: self.scale,
+        orientation: self.adjustOrientation()
+      )
+      return correctlyOrientedImage
     }
-    
-    private func drawSunglassesOverlay(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D, landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize, context: CGContext, sunglassesImage: UIImage) {
+  
+    private func drawSunglassesOverlay(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D, landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize, context: CGContext, sunglassesImage: UIImage, verticalTopToNoseOffset: CGFloat) {
+        let eye = computeEyeCentersAndAngle(landmarks: landmarks, boundingBox: boundingBox, imageSize: imageSize)
+        let isOrientationRight = (self.imageOrientation == .right)
+        let leftEyePx = isOrientationRight ? CGPoint(x: imageSize.width - eye.left.y, y: eye.left.x) : eye.left
+        let rightEyePx = isOrientationRight ? CGPoint(x: imageSize.width - eye.right.y, y: eye.right.x) : eye.right
+        let eyesCenterX = (leftEyePx.x + rightEyePx.x) / 2
+        let sunglassesY = (leftEyePx.y + rightEyePx.y) / 2
+        let rotationAngle = atan2(rightEyePx.y - leftEyePx.y, rightEyePx.x - leftEyePx.x)
         
-        print("=== Sunglasses Vertical Positioning Debug ===")
-        print("Sunglasses image size: \(sunglassesImage.size)")
-        print("Image size: \(imageSize)")
-        
-        let leftEyeCenter = calculateEyeCenter(from: convertEyePointsToImageCoordinates(points: leftEye.normalizedPoints, boundingBox: boundingBox))
-        let rightEyeCenter = calculateEyeCenter(from: convertEyePointsToImageCoordinates(points: rightEye.normalizedPoints, boundingBox: boundingBox))
-        
-        let leftEyeCenterPixels = CGPoint(
-            x: leftEyeCenter.x * imageSize.width,
-            y: leftEyeCenter.y * imageSize.height
-        )
-        let rightEyeCenterPixels = CGPoint(
-            x: rightEyeCenter.x * imageSize.width,
-            y: rightEyeCenter.y * imageSize.height
-        )
-        
-        let eyesCenterX = (leftEyeCenterPixels.x + rightEyeCenterPixels.x) / 2
-        let eyesCenterY = (leftEyeCenterPixels.y + rightEyeCenterPixels.y) / 2
-        
-        print("Left eye center (pixels): (\(leftEyeCenterPixels.x), \(leftEyeCenterPixels.y))")
-        print("Right eye center (pixels): (\(rightEyeCenterPixels.x), \(rightEyeCenterPixels.y))")
-        print("Eyes center Y: \(eyesCenterY)")
-        
-        // Use simple eye-based positioning (most reliable)
-        let sunglassesY = eyesCenterY// Position 25 pixels above eyes
-        print("Sunglasses Y: \(sunglassesY)")
-        print("Using simple eye-based positioning")
-        
-        print("Eyes center Y: \(eyesCenterY)")
-        print("Final sunglasses Y: \(sunglassesY)")
-        
-        let distanceBetweenEyes = sqrt(pow(rightEyeCenterPixels.x - leftEyeCenterPixels.x, 2) + pow(rightEyeCenterPixels.y - leftEyeCenterPixels.y, 2))
-        let faceWidth = distanceBetweenEyes * 2.5
-        
-        let widthScaleFactor = faceWidth / sunglassesImage.size.width
-        
-        let scaledSunglassesWidth = sunglassesImage.size.width * widthScaleFactor
+
+        var chosenLeftTop: CGPoint? = nil
+        var chosenRightTop: CGPoint? = nil
+        var baseWidth: CGFloat? = nil
+        if let result = computeContourTopPoints(landmarks: landmarks, boundingBox: boundingBox, imageSize: imageSize) {
+            chosenLeftTop = result.leftTop
+            chosenRightTop = result.rightTop
+            baseWidth = result.width
+            
+        } else if let w = computeContourWidth(landmarks: landmarks, boundingBox: boundingBox, imageSize: imageSize, eyesCenter: CGPoint(x: eyesCenterX, y: sunglassesY), angle: rotationAngle) {
+            baseWidth = w
+        }
+        guard let contourWidth = baseWidth else { return }
+        let scaledSunglassesWidth = contourWidth
         let scaledSunglassesHeight = (scaledSunglassesWidth * sunglassesImage.size.height) / sunglassesImage.size.width
         
-        print("Width scale factor: \(widthScaleFactor)")
-        print("Scaled sunglasses size: (\(scaledSunglassesWidth), \(scaledSunglassesHeight))")
-        
-        let sunglassesRect = CGRect(
-            x: eyesCenterX - scaledSunglassesWidth / 2,
-            y: sunglassesY - scaledSunglassesHeight / 2,
-            width: scaledSunglassesWidth,
-            height: scaledSunglassesHeight
-        )
-        
-        print("Final sunglasses rectangle: \(sunglassesRect)")
-        print("=========================================")
-        
+        let rectY = sunglassesY - scaledSunglassesHeight / 2
+        let rectXCenter: CGFloat = eyesCenterX
+
+        if let lt = chosenLeftTop, let rt = chosenRightTop {
+            let r: CGFloat = 20
+            let ltRect = CGRect(x: lt.x - r/2, y: lt.y - r/2, width: r, height: r)
+            let rtRect = CGRect(x: rt.x - r/2, y: rt.y - r/2, width: r, height: r)
+            UIColor.green.setFill()
+            UIBezierPath(ovalIn: ltRect).fill()
+            UIColor.red.setFill()
+            UIBezierPath(ovalIn: rtRect).fill()
+        }
+
+        let sunglassesRect = CGRect(x: rectXCenter - scaledSunglassesWidth / 2, y: rectY, width: scaledSunglassesWidth, height: scaledSunglassesHeight)
         context.saveGState()
         context.scaleBy(x: 1.0, y: -1.0)
+        let anchorFromTop = (verticalTopToNoseOffset / 100.0) * scaledSunglassesHeight
+        let anchorFromBottom = (scaledSunglassesHeight - anchorFromTop) * 1.05
+        let flippedRect = CGRect(x: sunglassesRect.origin.x, y: -sunglassesRect.origin.y - sunglassesRect.height, width: sunglassesRect.width, height: sunglassesRect.height)
+        let rotationAnchor = CGPoint(x: flippedRect.midX, y: flippedRect.origin.y + anchorFromBottom)
         
-        // Adjust Y position for flipped coordinate system
-        let flippedRect = CGRect(
-            x: sunglassesRect.origin.x,
-            y: -sunglassesRect.origin.y - sunglassesRect.height,
-            width: sunglassesRect.width,
-            height: sunglassesRect.height
-        )
-        
+        context.translateBy(x: rotationAnchor.x, y: rotationAnchor.y)
+        var appliedAngle = -rotationAngle
+        if self.imageOrientation == .right {
+            appliedAngle += .pi / 2
+        }
+        context.rotate(by: appliedAngle)
+        context.translateBy(x: -rotationAnchor.x, y: -rotationAnchor.y)
         sunglassesImage.draw(in: flippedRect)
         context.restoreGState()
     }
@@ -288,28 +279,113 @@ extension UIImage {
             return CGPoint(x: imageX, y: imageY)
         }
     }
-    
-    private func adjustOrientation() -> UIImage.Orientation {
-        switch self.imageOrientation {
-        case .up:
-            return .downMirrored
-        case .upMirrored:
-            return .up
-        case .down:
-            return .upMirrored
-        case .downMirrored:
-            return .down
-        case .left:
-            return .rightMirrored
-        case .rightMirrored:
-            return .left
-        case .right:
-            return .leftMirrored
-        case .leftMirrored:
-            return .right
-        @unknown default:
-            return self.imageOrientation
-        }
+  
+  private func computeEyeCentersAndAngle(landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize) -> (left: CGPoint, right: CGPoint, centerX: CGFloat, centerY: CGFloat, angle: CGFloat) {
+    let leftPts = landmarks.leftEye?.normalizedPoints ?? []
+    let rightPts = landmarks.rightEye?.normalizedPoints ?? []
+    let leftCenterNorm = calculateEyeCenter(from: recalculateFromBoundingBoxToImage(normalizedPoints: leftPts, boundingBox: boundingBox))
+    let rightCenterNorm = calculateEyeCenter(from: recalculateFromBoundingBoxToImage(normalizedPoints: rightPts, boundingBox: boundingBox))
+    let leftPx = CGPoint(x: leftCenterNorm.x * imageSize.width, y: leftCenterNorm.y * imageSize.height)
+    let rightPx = CGPoint(x: rightCenterNorm.x * imageSize.width, y: rightCenterNorm.y * imageSize.height)
+    let centerX = (leftPx.x + rightPx.x) / 2
+    let centerY = (leftPx.y + rightPx.y) / 2
+    let angle = atan2(rightPx.y - leftPx.y, rightPx.x - leftPx.x)
+    return (leftPx, rightPx, centerX, centerY, angle)
+  }
+  
+  private func computeContourWidth(landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize, eyesCenter: CGPoint, angle: CGFloat) -> CGFloat? {
+    guard let contour = landmarks.faceContour else { return nil }
+    let pts = recalculateFromBoundingBoxToImage(normalizedPoints: contour.normalizedPoints, boundingBox: boundingBox)
+    let px = pts.map { CGPoint(x: $0.x * imageSize.width, y: $0.y * imageSize.height) }
+    guard !px.isEmpty else { return nil }
+    print("contour pts=\(px.count) eyesCenter=(\(eyesCenter.x),\(eyesCenter.y)) angleDeg=\(angle * 180.0 / .pi)")
+    if let minYPoint = px.min(by: { $0.y < $1.y }) {
+      let splitX = minYPoint.x
+      let left = px.filter { $0.x <= splitX }
+      let right = px.filter { $0.x >= splitX }
+      let leftTop = left.max(by: { $0.y < $1.y })
+      let rightTop = right.max(by: { $0.y < $1.y })
+      print("splitX=\(splitX) leftCount=\(left.count) rightCount=\(right.count) leftTop=\(String(describing: leftTop)) rightTop=\(String(describing: rightTop))")
+      if let lt = leftTop, let rt = rightTop {
+        let w = abs(rt.x - lt.x)
+        print("contour width by tops: lt=(\(lt.x),\(lt.y)) rt=(\(rt.x),\(rt.y)) width=\(w)")
+        return w
+      }
     }
+    let xs = px.map { $0.x }
+    guard let minX = xs.min(), let maxX = xs.max() else { return nil }
+    print("fallback contour width span=\(maxX - minX)")
+    return maxX - minX
+  }
+
+  private func computeContourTopPoints(landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize) -> (leftTop: CGPoint, rightTop: CGPoint, width: CGFloat)? {
+    guard let contour = landmarks.faceContour else { return nil }
+    let pts = recalculateFromBoundingBoxToImage(normalizedPoints: contour.normalizedPoints, boundingBox: boundingBox)
+    let px = pts.map { CGPoint(x: $0.x * imageSize.width, y: $0.y * imageSize.height) }
+    guard !px.isEmpty else { return nil }
+    let needsAxisSwap = (self.imageOrientation == .right || self.imageOrientation == .rightMirrored || self.imageOrientation == .left || self.imageOrientation == .leftMirrored)
+    if !needsAxisSwap {
+      guard let minYPoint = px.min(by: { $0.y < $1.y }) else { return nil }
+      let splitX = minYPoint.x
+      let left = px.filter { $0.x <= splitX }
+      let right = px.filter { $0.x >= splitX }
+      guard let leftTop = left.max(by: { $0.y < $1.y }), let rightTop = right.max(by: { $0.y < $1.y }) else { return nil }
+      let width = abs(rightTop.x - leftTop.x)
+      return (leftTop, rightTop, width)
+    } else {
+      let rotated: [(orig: CGPoint, rx: CGFloat, ry: CGFloat)] = px.map { p in
+        let rx = p.y
+        let ry = -p.x
+        return (p, rx, ry)
+      }
+      guard let minRY = rotated.min(by: { $0.ry < $1.ry }) else { return nil }
+      let splitRX = minRY.rx
+      let left = rotated.filter { $0.rx <= splitRX }
+      let right = rotated.filter { $0.rx >= splitRX }
+      guard let leftTop = left.max(by: { $0.ry < $1.ry }), let rightTop = right.max(by: { $0.ry < $1.ry }) else { return nil }
+      let width = hypot(rightTop.rx - leftTop.rx, rightTop.ry - leftTop.ry)
+      return (leftTop.orig, rightTop.orig, width)
+    }
+  }
+  
+  private func computeNoseTopAndRectY(landmarks: VNFaceLandmarks2D,
+                                      boundingBox: CGRect,
+                                      imageSize: CGSize,
+                                      scaledHeight: CGFloat,
+                                      verticalTopToNoseOffset: CGFloat) -> (top: CGPoint?, rectY: CGFloat?) {
+    if let noseRegion = landmarks.noseCrest ?? landmarks.nose {
+      let pts = recalculateFromBoundingBoxToImage(normalizedPoints: noseRegion.normalizedPoints, boundingBox: boundingBox)
+      let px = pts.map { CGPoint(x: $0.x * imageSize.width, y: $0.y * imageSize.height) }
+      if let top = px.max(by: { $0.y < $1.y }) {
+        let anchor = (scaledHeight - (verticalTopToNoseOffset / 100.0 * scaledHeight)) * 1.05
+        let rectY = (top.y - anchor) * 1.05
+        return (top, rectY)
+      }
+    }
+    return (nil, nil)
+  }
+    
+  private func adjustOrientation() -> UIImage.Orientation {
+    switch self.imageOrientation {
+    case .up:
+      return .downMirrored
+    case .upMirrored:
+      return .up
+    case .down:
+      return .upMirrored
+    case .downMirrored:
+      return .down
+    case .left:
+      return .rightMirrored
+    case .rightMirrored:
+      return .left
+    case .right:
+      return .leftMirrored
+    case .leftMirrored:
+      return .right
+    @unknown default:
+      return self.imageOrientation
+    }
+  }
 }
 

@@ -9,15 +9,18 @@ import SwiftUI
 import AVFoundation
 import PhotosUI
 
+
+
 struct SunglassesView: View {
     @State private var viewModel = ImageViewModel()
     
     @State private var showCameraPicker = false
     @State private var selectedSunglassesIndex: Int? = nil
     
-    private let sunglassesImages = (1...10).map { "sunglasses-\($0)" }
+    private let sunglassesImages: [SunglassImage] = SunglassImage.demoSunglasses
+    
     private var selectedSunglassesImageName: String? {
-        return selectedSunglassesIndex != nil ? sunglassesImages[selectedSunglassesIndex!] : nil
+        return selectedSunglassesIndex != nil ? sunglassesImages[selectedSunglassesIndex!].imageName : nil
     }
     
     var body: some View {
@@ -29,7 +32,7 @@ struct SunglassesView: View {
                             Button {
                                 selectedSunglassesIndex = index
                             } label: {
-                                Image(sunglassesImages[index])
+                                Image(sunglassesImages[index].imageName)
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 60, height: 60)
@@ -57,10 +60,13 @@ struct SunglassesView: View {
             
             VStack {
                 if let selectedSunglassesImageName = selectedSunglassesImageName,
+                   let selectedIndex = selectedSunglassesIndex,
+                   selectedIndex < sunglassesImages.count,
                    let image = viewModel.selectedOrCapturedImage?
                     .addSunglassesOverlay(landmarks: viewModel.faceLandmarks,
                                           boundingBox: viewModel.faceBoundingBox,
-                                          sunglassesImage: UIImage(named: selectedSunglassesImageName)
+                                          sunglassesImage: UIImage(named: selectedSunglassesImageName),
+                                          verticalTopToNoseOffset: CGFloat(sunglassesImages[selectedIndex].verticalTopToNoseOffset)
                     ) {
                     Image(uiImage: image)
                         .resizable()
