@@ -61,6 +61,7 @@ class ImageViewModel {
     }
     
     //MARK: - Photo Picker
+    
     private func loadImage(from item: PhotosPickerItem) {
         item.loadTransferable(type: Data.self) { result in
             DispatchQueue.main.async {

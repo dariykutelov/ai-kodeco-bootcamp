@@ -33,6 +33,9 @@ struct TaskListView: View {
                 }
             }
             .navigationTitle(Text("Tasks"))
+            .onDisappear {
+                viewModel.translationStatusMessage = ""
+            }
         }
     }
 }

@@ -10,6 +10,9 @@ import Vision
 import OSLog
 
 extension UIImage {
+    
+    // MARK: - Google Eyes
+    
     func drawGooglyEyes(landmarks: VNFaceLandmarks2D?, boundingBox: CGRect?) -> UIImage? {
         
         guard let cgImage = self.cgImage else {
@@ -74,10 +77,10 @@ extension UIImage {
     }
     
     private func calculateEyeCenter(from imagePoints: [CGPoint]) -> CGPoint {
-        let minX = imagePoints.map { $0.x }.min() ?? 0
-        let maxX = imagePoints.map { $0.x }.max() ?? 0
-        let minY = imagePoints.map { $0.y }.min() ?? 0
-        let maxY = imagePoints.map { $0.y }.max() ?? 0
+      let minX = imagePoints.min(by: { $0.x < $1.x })?.x ?? 0
+      let maxX = imagePoints.max(by: { $0.x < $1.x })?.x ?? 0
+      let minY = imagePoints.min(by: { $0.y < $1.y })?.y ?? 0
+      let maxY = imagePoints.max(by: { $0.y < $1.y })?.y ?? 0
         
         let centerX = (minX + maxX) / 2
         let centerY = (minY + maxY) / 2
@@ -158,6 +161,125 @@ extension UIImage {
         let blackCirclePath = UIBezierPath(ovalIn: blackCircleRect)
         blackCirclePath.fill()
     }
+    
+    // MARK: - Sunglasses Overlay
+
+    func addSunglassesOverlay(landmarks: VNFaceLandmarks2D?,
+                              boundingBox: CGRect?,
+                              sunglassesImage: UIImage?) -> UIImage? {
+        
+        guard let cgImage = self.cgImage else {
+            return nil
+        }
+        
+        guard let landmarks = landmarks, let boundingBox = boundingBox, let sunglassesImage = sunglassesImage else {
+            return self
+        }
+        
+        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, self.scale)
+        
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return nil
+        }
+        
+        context.draw(cgImage, in: CGRect(origin: .zero, size: imageSize))
+        
+        if let leftEye = landmarks.leftEye, let rightEye = landmarks.rightEye {
+            drawSunglassesOverlay(leftEye: leftEye,
+                                  rightEye: rightEye,
+                                  landmarks: landmarks,
+                                  boundingBox: boundingBox,
+                                  imageSize: imageSize,
+                                  context: context,
+                                  sunglassesImage: sunglassesImage)
+        }
+        
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        guard let finalCgImage = newImage?.cgImage else {
+            return nil
+        }
+        
+        let correctlyOrientedImage = UIImage(
+            cgImage: finalCgImage,
+            scale: self.scale,
+            orientation: self.adjustOrientation()
+        )
+        return correctlyOrientedImage
+    }
+    
+    private func drawSunglassesOverlay(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D, landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize, context: CGContext, sunglassesImage: UIImage) {
+        
+        print("=== Sunglasses Vertical Positioning Debug ===")
+        print("Sunglasses image size: \(sunglassesImage.size)")
+        print("Image size: \(imageSize)")
+        
+        let leftEyeCenter = calculateEyeCenter(from: convertEyePointsToImageCoordinates(points: leftEye.normalizedPoints, boundingBox: boundingBox))
+        let rightEyeCenter = calculateEyeCenter(from: convertEyePointsToImageCoordinates(points: rightEye.normalizedPoints, boundingBox: boundingBox))
+        
+        let leftEyeCenterPixels = CGPoint(
+            x: leftEyeCenter.x * imageSize.width,
+            y: leftEyeCenter.y * imageSize.height
+        )
+        let rightEyeCenterPixels = CGPoint(
+            x: rightEyeCenter.x * imageSize.width,
+            y: rightEyeCenter.y * imageSize.height
+        )
+        
+        let eyesCenterX = (leftEyeCenterPixels.x + rightEyeCenterPixels.x) / 2
+        let eyesCenterY = (leftEyeCenterPixels.y + rightEyeCenterPixels.y) / 2
+        
+        print("Left eye center (pixels): (\(leftEyeCenterPixels.x), \(leftEyeCenterPixels.y))")
+        print("Right eye center (pixels): (\(rightEyeCenterPixels.x), \(rightEyeCenterPixels.y))")
+        print("Eyes center Y: \(eyesCenterY)")
+        
+        // Use simple eye-based positioning (most reliable)
+        let sunglassesY = eyesCenterY// Position 25 pixels above eyes
+        print("Sunglasses Y: \(sunglassesY)")
+        print("Using simple eye-based positioning")
+        
+        print("Eyes center Y: \(eyesCenterY)")
+        print("Final sunglasses Y: \(sunglassesY)")
+        
+        let distanceBetweenEyes = sqrt(pow(rightEyeCenterPixels.x - leftEyeCenterPixels.x, 2) + pow(rightEyeCenterPixels.y - leftEyeCenterPixels.y, 2))
+        let faceWidth = distanceBetweenEyes * 2.5
+        
+        let widthScaleFactor = faceWidth / sunglassesImage.size.width
+        
+        let scaledSunglassesWidth = sunglassesImage.size.width * widthScaleFactor
+        let scaledSunglassesHeight = (scaledSunglassesWidth * sunglassesImage.size.height) / sunglassesImage.size.width
+        
+        print("Width scale factor: \(widthScaleFactor)")
+        print("Scaled sunglasses size: (\(scaledSunglassesWidth), \(scaledSunglassesHeight))")
+        
+        let sunglassesRect = CGRect(
+            x: eyesCenterX - scaledSunglassesWidth / 2,
+            y: sunglassesY - scaledSunglassesHeight / 2,
+            width: scaledSunglassesWidth,
+            height: scaledSunglassesHeight
+        )
+        
+        print("Final sunglasses rectangle: \(sunglassesRect)")
+        print("=========================================")
+        
+        context.saveGState()
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        // Adjust Y position for flipped coordinate system
+        let flippedRect = CGRect(
+            x: sunglassesRect.origin.x,
+            y: -sunglassesRect.origin.y - sunglassesRect.height,
+            width: sunglassesRect.width,
+            height: sunglassesRect.height
+        )
+        
+        sunglassesImage.draw(in: flippedRect)
+        context.restoreGState()
+    }
+    
+    // MARK: - Helper Methods
     
     private func recalculateFromBoundingBoxToImage(normalizedPoints: [CGPoint], boundingBox: CGRect) -> [CGPoint] {
         return normalizedPoints.map { point in

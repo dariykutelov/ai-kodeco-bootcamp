@@ -15,33 +15,35 @@ struct FunnyFaceView: View {
     @State private var showCameraPicker = false
     
     var body: some View {
-        VStack {
-            if let image = viewModel.selectedOrCapturedImage?
-                .drawGooglyEyes(landmarks: viewModel.faceLandmarks,
-                                boundingBox: viewModel.faceBoundingBox) {
-                Image(uiImage: image)
-                    .resizable()
-                    .frame(maxWidth: .infinity)
-                    .scaledToFit()
-                    .padding(.horizontal, 16)
-            } else {
-                VStack(alignment: .center) {
-                    Text("Select an Image")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    Text("No image selected")
-                        .font(.body)
-                        .foregroundStyle(.gray)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 400)
-            }
-            
-            Spacer()
-            
+        NavigationStack {
             VStack {
-                HStack {
+                if let image = viewModel.selectedOrCapturedImage?
+                    .drawGooglyEyes(landmarks: viewModel.faceLandmarks,
+                                    boundingBox: viewModel.faceBoundingBox) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .frame(maxWidth: .infinity)
+                        .scaledToFit()
+                        .padding(.horizontal, 16)
+                } else {
+                    VStack(alignment: .center) {
+                        Text("Select an Image")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        Text("No image selected")
+                            .font(.body)
+                            .foregroundStyle(.gray)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 400)
+                }
+                
+                Spacer()
+                
+                VStack {
                     HStack(spacing: 4) {
+                        Spacer()
+                        
                         Button {
                             viewModel.reset()
                         } label: {
@@ -71,20 +73,6 @@ struct FunnyFaceView: View {
                                 .font(Font.largeTitle.bold())
                                 .accentColor(.indigo)
                         }
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 4) {
-                        Button {
-                            viewModel.detectFace()
-                        } label: {
-                            Text("Funny face!")
-                                .padding(.horizontal, 10)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .accentColor(.orange)
-                        
                         
                         Button {
                             viewModel.reset()
@@ -93,39 +81,38 @@ struct FunnyFaceView: View {
                                 .font(Font.largeTitle.bold())
                                 .accentColor(.indigo)
                         }
+                        
+                        Spacer()
                     }
-                }
-                .padding()
-            }
-            
-            Text(permissionMessage)
-                .padding()
-            
-            
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
                     .padding()
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(8)
-                    .padding(.horizontal)
+                    
+                    Button {
+                        viewModel.detectFace()
+                    } label: {
+                        Text("Funny face!")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .padding(12)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accentColor(.orange)
+                    .disabled(viewModel.selectedOrCapturedImage == nil)
+                    .padding(.bottom)
+                }
+                
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+                }
             }
-        }
-        .sheet(isPresented: $showCameraPicker) {
-            CameraPicker(selectedImage: $viewModel.selectedOrCapturedImage)
-        }
-    }
-    
-    private var permissionMessage: String {
-        switch viewModel.cameraPermissionStatus {
-        case .authorized:
-            return ""
-        case .denied, .restricted:
-            return "Camera permission denied. Please go to Settings to enable it."
-        case .notDetermined:
-            return "Camera permission not yet requested. Tap the button to request it."
-        @unknown default:
-            return ""
+            .sheet(isPresented: $showCameraPicker) {
+                CameraPicker(selectedImage: $viewModel.selectedOrCapturedImage)
+            }
+            .navigationTitle("Googly Eyes")
         }
     }
 }

@@ -18,7 +18,6 @@ struct ContentView: View {
             VStack {
                 TaskListView()
                 
-                // Status messages for user feedback
                 if !viewModel.translationStatusMessage.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -53,6 +52,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .automatic) {
                     Button {
                         isAddTaskPresented.toggle()
+                        viewModel.translationStatusMessage = ""
                     } label: {
                         Label("Add task", systemImage: "plus")
                     }
