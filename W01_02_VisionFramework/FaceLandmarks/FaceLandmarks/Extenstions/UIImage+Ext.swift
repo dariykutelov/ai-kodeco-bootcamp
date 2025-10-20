@@ -229,23 +229,33 @@ extension UIImage {
         guard let sunglassesImageWidth = sunglassesImage.cgImage?.width,
               let sunglassesImageHeight  = sunglassesImage.cgImage?.height else { return }
         
-        let contourWidth = calculateSunglassesWidth(landmarks: landmarks, boundingBox: boundingBox, imageSize: imageSize, fallbackWidth: sunglassesImageWidth)
+        let contourWidth = calculateSunglassesWidth(landmarks: landmarks,
+                                                    boundingBox: boundingBox,
+                                                    imageSize: imageSize,
+                                                    fallbackWidth: sunglassesImageWidth)
+        
         let scaledHeight = CGFloat(contourWidth * sunglassesImageHeight / sunglassesImageWidth)
-        let noseTopResult = computeNoseTopAndRectY(landmarks: landmarks, boundingBox: boundingBox, imageSize: imageSize, scaledHeight: scaledHeight, verticalTopToNoseOffset: verticalTopToNoseOffset)
+        
+        let noseTopPoint = computeNoseTopPoint(landmarks: landmarks,
+                                               boundingBox: boundingBox,
+                                               imageSize: imageSize)
         
         let sunglassesRect: CGRect
-        if let noseTop = noseTopResult.top, let originalRectY = noseTopResult.rectY {
+        if let noseTop = noseTopPoint {
             let mode = cameraOrientationMode()
             let rectX: CGFloat
             let rectY: CGFloat
             
+            let anchor = (scaledHeight - (verticalTopToNoseOffset / 100.0 * scaledHeight)) * 0.95
+            print("anchor: \(anchor)")
+            
             switch mode {
             case .orientation3:
-                rectX = noseTop.y - CGFloat(contourWidth) / 2
-                rectY = imageSize.height - noseTop.x - scaledHeight * 1.65
+                rectX = noseTop.y - CGFloat(contourWidth) / 2 - anchor / 2
+                rectY = imageSize.height - noseTop.x - anchor * 2
             default:
                 rectX = noseTop.x - CGFloat(contourWidth) / 2
-                rectY = originalRectY
+                rectY = noseTop.y - anchor
             }
             
             sunglassesRect = CGRect(x: rectX,
@@ -270,7 +280,8 @@ extension UIImage {
             context.translateBy(x: -anchor.x, y: -anchor.y)
             break
         case .orientation3:
-            let anchor = CGPoint(x: sunglassesRect.midX + sunglassesRect.width/2, y: sunglassesRect.midY + sunglassesRect.height/2)
+            let anchor = CGPoint(x: sunglassesRect.midX + sunglassesRect.width/2,
+                                 y: sunglassesRect.midY + sunglassesRect.height/2)
             context.translateBy(x: anchor.x, y: anchor.y)
             context.rotate(by: -.pi / 2)
             context.translateBy(x: -anchor.x, y: -anchor.y)
@@ -281,6 +292,7 @@ extension UIImage {
         sunglassesImage.draw(in: sunglassesRect)
         context.restoreGState()
     }
+    
     
     // MARK: - Helper Methods
     
@@ -314,33 +326,22 @@ extension UIImage {
         return CGPoint(x: nx * imageSize.width, y: ny * imageSize.height)
     }
     
-    private func computeNoseTopAndRectY(landmarks: VNFaceLandmarks2D,
-                                        boundingBox: CGRect,
-                                        imageSize: CGSize,
-                                        scaledHeight: CGFloat,
-                                        verticalTopToNoseOffset: CGFloat) -> (top: CGPoint?, rectY: CGFloat?) {
+    private func computeNoseTopPoint(landmarks: VNFaceLandmarks2D,
+                                     boundingBox: CGRect,
+                                     imageSize: CGSize) -> CGPoint? {
         if let noseRegion = landmarks.noseCrest ?? landmarks.nose {
             let px = noseRegion.normalizedPoints.map { mapNormalizedPointToUprightPixels($0, boundingBox: boundingBox, imageSize: imageSize) }
-            
             let mode = cameraOrientationMode()
-            let top: CGPoint?
-            
             switch mode {
             case .orientation0:
-                top = px.max(by: { $0.y < $1.y })
+                return px.max(by: { $0.y < $1.y })
             case .orientation3:
-                top = px.min(by: { $0.x < $1.x })
+                return px.min(by: { $0.x < $1.x })
             case .other:
-                top = px.max(by: { $0.y < $1.y })
-            }
-            
-            if let top = top {
-                let anchor = (scaledHeight - (verticalTopToNoseOffset / 100.0 * scaledHeight)) * 1.05
-                let rectY = (top.y - anchor) * 1.05
-                return (top, rectY)
+                return px.max(by: { $0.y < $1.y })
             }
         }
-        return (nil, nil)
+        return nil
     }
     
     private func calculateSunglassesWidth(landmarks: VNFaceLandmarks2D, boundingBox: CGRect, imageSize: CGSize, fallbackWidth: Int) -> Int {
