@@ -17,7 +17,7 @@ struct ContentView: View {
             
             FunnyFaceView()
                 .tabItem {
-                    Label("Face Effects", systemImage: "photo.on.rectangle")
+                    Label("Funny Face", systemImage: "photo.on.rectangle")
                 }
             
             StreamFromCameraView()
