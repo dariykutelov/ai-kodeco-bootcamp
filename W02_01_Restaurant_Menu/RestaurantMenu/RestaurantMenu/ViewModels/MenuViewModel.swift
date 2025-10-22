@@ -10,12 +10,20 @@ import FoundationModels
 import Observation
 
 @Observable class MenuViewModel {
-    var menu: RestaurantMenu.PartiallyGenerated?
+    var menus: [RestaurantMenu.PartiallyGenerated] = []
     var special: MenuItem?
     var selectedMealTypes: Set<MealType> = [.lunch]
     var selectedRestaurantTypes: Set<RestaurantType> = [.casualDining]
     var createCustomMenu = false
     var ingredients = "lamb, salmon, duck"
+    
+    private var sortedMealTypes: [MealType] {
+        guard selectedMealTypes.count > 1 else { return Array(selectedMealTypes) }
+        let order: [MealType] = [.breakfast, .lunch, .dinner]
+        return selectedMealTypes.sorted { mealType1, mealType2 in
+            order.firstIndex(of: mealType1) ?? 0 < order.firstIndex(of: mealType2) ?? 0
+        }
+    }
     
     private func ingredientArray(from ingredients: String) -> [String] {
         let array = ingredients.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -27,19 +35,35 @@ import Observation
     }
     
     func generateLunchMenu() async {
+        menus.removeAll()
+        
         let instructions = "You are a helpful model assisting with generating realistic restaurant menus."
         let session = LanguageModelSession(instructions: instructions)
-        let prompt = "Create a menu for lunch at an Korean restaurant"
-        let streamedResponse = session.streamResponse(to: prompt,
-                                                      generating: RestaurantMenu.self)
-        do {
-            for try await partialResponse in streamedResponse {
-                menu = partialResponse.content
-            }
-        } catch {
-            print(error.localizedDescription)
-        }
         
+        for restaurantType in selectedRestaurantTypes {
+            for mealType in sortedMealTypes {
+                let prompt = "Create a \(mealType.rawValue.lowercased()) menu for a \(restaurantType.rawValue.lowercased()) restaurant. Generate 4-8 menu items appropriate for this meal type and restaurant style."
+                
+                do {
+                    let streamedResponse = session.streamResponse(to: prompt, generating: RestaurantMenu.self)
+                    
+                    var menuAdded = false
+                    
+                    for try await partialResponse in streamedResponse {
+                        if !menuAdded {
+                            menus.append(partialResponse.content)
+                            menuAdded = true
+                        } else {
+                            if !menus.isEmpty {
+                                menus[menus.count - 1] = partialResponse.content
+                            }
+                        }
+                    }
+                } catch {
+                    print("Error generating menu for \(restaurantType.rawValue) - \(mealType.rawValue): \(error.localizedDescription)")
+                }
+            }
+        }
     }
     
     func generateMenuSpecial(ingredients: String) async {

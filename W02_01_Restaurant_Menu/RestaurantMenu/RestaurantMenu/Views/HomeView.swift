@@ -61,10 +61,10 @@ struct HomeView: View {
                 
                 Button {
                     showMenuList.toggle()
-                Task {
-                    await viewModel.generateLunchMenu()
-                    await viewModel.generateMenuSpecial(ingredients: viewModel.ingredients)
-                }
+                    Task {
+                        await viewModel.generateLunchMenu()
+                        await viewModel.generateMenuSpecial(ingredients: viewModel.ingredients)
+                    }
                 } label: {
                     Label("Generate Lunch Menu", systemImage: "menucard")
                         .font(.headline)
@@ -78,8 +78,7 @@ struct HomeView: View {
             .padding()
             .sheet(isPresented: $showMenuList) {
                 MenuListView(
-                    menu: viewModel.menu,
-                    special: viewModel.special
+                    menus: viewModel.menus
                 )
             }
             .navigationTitle("Create Your Menu")

@@ -9,28 +9,61 @@ import SwiftUI
 import FoundationModels
 
 struct MenuListView: View {
-    var menu: RestaurantMenu.PartiallyGenerated?
-    var special: MenuItem?
-    
+    var menus: [RestaurantMenu.PartiallyGenerated]
+
     var body: some View {
-        VStack {
-            if let special = special {
-                MenuItemView(menuItem: special.asPartiallyGenerated())
-                Text("Today's Special")
-                    .font(.title2)
-                Divider()
-            }
-            
-            if let menu = menu, let menuItems = menu.menu {
-                List(menuItems) { item in
-                    MenuItemView(menuItem: item)
+        let _ = print("MenuListView body called with \(menus.count) menus")
+        NavigationView {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    if menus.isEmpty {
+                        ProgressView("Generating menus...")
+                            .font(.title2)
+                            .padding()
+                    } else {
+                        ForEach(menus, id: \.id) { menu in 
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    if let menuType = menu.type?.rawValue {
+                                    Text(menuType)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    }
+                                    Spacer()
+                                    
+                                    if let reataurantType = menu.restaurantType?.rawValue {
+                                        Text(reataurantType)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                
+                                if let menuItems = menu.menu, !menuItems.isEmpty {
+                                    ForEach(menuItems, id: \.id) { item in
+                                        MenuItemView(menuItem: item)
+                                    }
+                                } else {
+                                    Text("No menu items available")
+                                        .foregroundColor(.secondary)
+                                        .italic()
+                                        .padding()
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        }
+                    }
                 }
+                .padding()
             }
+            .navigationTitle("Generated Menus")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .padding()
     }
 }
 
-#Preview {
-    MenuListView()
-}
+//#Preview {
+//    MenuListView()
+//}

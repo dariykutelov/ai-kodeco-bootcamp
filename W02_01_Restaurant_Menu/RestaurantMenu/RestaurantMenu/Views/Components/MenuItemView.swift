@@ -17,10 +17,11 @@ struct MenuItemView: View {
                 Text(menuItem.name ?? "")
                     .foregroundStyle(.orange)
                     .fontWeight(.semibold)
-                Spacer()
                 
-                if let cost = menuItem.cost {
-                    Text(cost, format: .currency(code: "EUR").locale(Locale(identifier: "en_US")))
+                Spacer()
+            
+                if let menuItemCost = menuItem.cost {
+                    Text(menuItemCost, format: .currency(code: "EUR").locale(Locale(identifier: "en_US")))
                         .foregroundStyle(.indigo)
                 }
             }
@@ -31,12 +32,12 @@ struct MenuItemView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
             
-            if let ingredients = menuItem.ingredients {
+            if let menuItemIngredients = menuItem.ingredients {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ingredients")
                         .font(.headline)
                         .foregroundStyle(.indigo)
-                    Text(ingredients.joined(separator: " • "))
+                    Text(menuItemIngredients.joined(separator: " • "))
                         .font(.subheadline)
                 }
             }
