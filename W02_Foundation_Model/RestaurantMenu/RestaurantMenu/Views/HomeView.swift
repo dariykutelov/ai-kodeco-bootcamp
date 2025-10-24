@@ -29,44 +29,29 @@ struct HomeView: View {
                     tintColor: .green
                 )
                 
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Create Custom Menu")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Toggle("", isOn: $viewModel.createCustomMenu)
-                            .labelsHidden()
-                            .tint(.indigo)
-                    }
-                    
-                    if viewModel.createCustomMenu {
-                        VStack(alignment: .leading) {
-                            Text("Special Menu")
-                                .fontWeight(.semibold)
-                            Text("Comma separated list of possible ingredients.")
-                                .foregroundStyle(.secondary)
-                            TextField(
-                                "Ingredients for Special",
-                                text: $viewModel.ingredients
-                            )
-                            .textFieldStyle(.roundedBorder)
-                            .padding(.vertical, 8)
-                        }
-                        .font(.subheadline)
-                    }
+                VStack(alignment: .leading) {
+                    Text("Ingredients that you like to be included")
+                        .fontWeight(.semibold)
+                    Text("Comma separated list of desired ingredients.")
+                        .foregroundStyle(.secondary)
+                    TextField(
+                        "Ingredients for Special",
+                        text: $viewModel.ingredients
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.vertical, 8)
                 }
+                .font(.subheadline)
                 
                 Spacer()
                 
                 Button {
                     showMenuList.toggle()
                     Task {
-                        await viewModel.generateLunchMenu()
-                        await viewModel.generateMenuSpecial(ingredients: viewModel.ingredients)
+                        await viewModel.generateMenus()
                     }
                 } label: {
-                    Label("Generate Lunch Menu", systemImage: "menucard")
+                    Text(viewModel.buttonText)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -78,7 +63,7 @@ struct HomeView: View {
             .padding()
             .sheet(isPresented: $showMenuList) {
                 MenuListView(
-                    menus: viewModel.menus
+                    menus: viewModel.dynamicMenus
                 )
             }
             .navigationTitle("Create Your Menu")

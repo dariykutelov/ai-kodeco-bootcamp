@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct MenuListView: View {
-    var menus: [RestaurantMenu.PartiallyGenerated]
+    var menus: [DynamicMenu]
 
     var body: some View {
         let _ = print("MenuListView body called with \(menus.count) menus")
@@ -39,8 +39,8 @@ struct MenuListView: View {
                                 }
                                 .padding(.horizontal)
                                 
-                                if let menuItems = menu.menu, !menuItems.isEmpty {
-                                    ForEach(menuItems, id: \.id) { item in
+                                if !menu.menu.isEmpty {
+                                    ForEach(menu.menu, id: \.id) { item in
                                         MenuItemView(menuItem: item)
                                     }
                                 } else {
