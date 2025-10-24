@@ -39,3 +39,19 @@ struct RestaurantMenu: Identifiable {
         UUID().uuidString
     }
 }
+
+
+// MARK: - Mock data
+
+extension MenuItem {
+    static let mockMenuItem = MenuItem(
+        name: "Caesar Salad",
+        description: "Romaine lettuce tossed in Caesar dressing with parmesan cheese and croutons.",
+        ingredients: ["romaine lettuce", "Caesar dressing", "parmesan cheese", "croutons"],
+        cost: 10.0
+      )
+}
+
+extension RestaurantMenu {
+    static let mockRestaurantMenu = RestaurantMenu(type: .lunch, restaurantType: .casualDining, menu: [MenuItem.mockMenuItem])
+}

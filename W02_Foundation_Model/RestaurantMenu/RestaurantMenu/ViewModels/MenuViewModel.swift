@@ -9,19 +9,8 @@ import Foundation
 import FoundationModels
 import Observation
 
-struct DynamicMenu: Identifiable {
-    let type: MealType?
-    let restaurantType: RestaurantType?
-    let menu: [MenuItem]
-    
-    var id: String {
-        "\(type?.rawValue ?? "")-\(restaurantType?.rawValue ?? "")"
-    }
-}
-
 @Observable class MenuViewModel {
     var menus: [RestaurantMenu.PartiallyGenerated] = []
-    var dynamicMenus: [DynamicMenu] = []
     var special: MenuItem?
     var selectedMealTypes: Set<MealType> = [.lunch]
     var selectedRestaurantTypes: Set<RestaurantType> = [.casualDining]
@@ -51,65 +40,19 @@ struct DynamicMenu: Identifiable {
     }
     
     func generateMenus() async {
-        dynamicMenus.removeAll()
+        menus.removeAll()
         
-        let menuItemSchema = DynamicGenerationSchema(
-            name: "menuItem",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "ingredients",
-                    schema: DynamicGenerationSchema(
-                        name: "ingredients",
-                        anyOf: ingredientArray(from: ingredients)
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    schema: DynamicGenerationSchema(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "description",
-                    schema: DynamicGenerationSchema(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    schema: DynamicGenerationSchema(type: Decimal.self)
-                )
-            ]
-        )
+        let instructions = """
+        You are an expert chef and restaurant menu designer. Your task is to create authentic, appealing restaurant menus that match the specified meal type and restaurant style.
         
-        let mealSchema = DynamicGenerationSchema(
-            name: "menu",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "mealType",
-                    schema: DynamicGenerationSchema(
-                        name: "mealType",
-                        anyOf: MealType.allCases.map { $0.rawValue }
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "restaurantType",
-                    schema: DynamicGenerationSchema(
-                        name: "restaurantType",
-                        anyOf: RestaurantType.allCases.map { $0.rawValue }
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "items",
-                    description: "An array of 4-8 menu items",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: menuItemSchema
-                    )
-                )
-            ]
-        )
-        
-        let schema = try? GenerationSchema(root: mealSchema, dependencies: [])
-        
-        guard let schema = schema else { return }
-        
-        let instructions = "You are a helpful model assisting with generating realistic restaurant menus."
+        Guidelines:
+        - Generate menu items with creative, appealing names appropriate for the restaurant type
+        - Write descriptions that are enticing and highlight key ingredients and preparation methods
+        - Set prices in EUR that are realistic for the restaurant type (fine dining higher, casual dining moderate, fast food lower)
+        - When specific ingredients are mentioned, incorporate them creatively into some (but not all) dishes
+        - Ensure all items are appropriate for the specified meal type (breakfast, lunch, or dinner)
+        - Vary the dishes to create a balanced, diverse menu
+        """
         let session = LanguageModelSession(instructions: instructions)
         
         for restaurantType in selectedRestaurantTypes {
@@ -124,19 +67,17 @@ struct DynamicMenu: Identifiable {
                 """
                 
                 do {
-                    let streamedResponse = try session.streamResponse(to: prompt, schema: schema)
+                    let streamedResponse = session.streamResponse(to: prompt, generating: RestaurantMenu.self)
                     
                     var menuAdded = false
                     
                     for try await partialResponse in streamedResponse {
-                        if let partialMenu = parseMenuFromGeneratedContent(partialResponse.content) {
-                            if !menuAdded {
-                                dynamicMenus.append(partialMenu)
-                                menuAdded = true
-                            } else {
-                                if !dynamicMenus.isEmpty {
-                                    dynamicMenus[dynamicMenus.count - 1] = partialMenu
-                                }
+                        if !menuAdded {
+                            menus.append(partialResponse.content)
+                            menuAdded = true
+                        } else {
+                            if !menus.isEmpty {
+                                menus[menus.count - 1] = partialResponse.content
                             }
                         }
                     }
@@ -145,42 +86,5 @@ struct DynamicMenu: Identifiable {
                 }
             }
         }
-    }
-
-    private func parseMenuFromGeneratedContent(_ content: GeneratedContent) -> DynamicMenu? {
-        let mealTypeValue = try? content.value(String.self, forProperty: "mealType")
-        let restaurantTypeValue = try? content.value(String.self, forProperty: "restaurantType")
-        let itemsArray = try? content.value([GeneratedContent].self, forProperty: "items")
-        
-        var menuItems: [MenuItem] = []
-        
-        if let itemsArray = itemsArray {
-            for itemContent in itemsArray {
-                let name = try? itemContent.value(String.self, forProperty: "name")
-                let description = try? itemContent.value(String.self, forProperty: "description")
-                let ingredientsValue = try? itemContent.value(String.self, forProperty: "ingredients")
-                let price = try? itemContent.value(Decimal.self, forProperty: "price")
-                
-                if let name = name, let description = description, let price = price {
-                    let menuItem = MenuItem(
-                        name: name,
-                        description: description,
-                        ingredients: ingredientsValue == nil ? [] : [ingredientsValue!],
-                        cost: price
-                    )
-                    menuItems.append(menuItem)
-                }
-            }
-        }
-        
-        if !menuItems.isEmpty {
-            return DynamicMenu(
-                type: mealTypeValue.flatMap { MealType(rawValue: $0) },
-                restaurantType: restaurantTypeValue.flatMap { RestaurantType(rawValue: $0) },
-                menu: menuItems
-            )
-        }
-        
-        return nil
     }
 }

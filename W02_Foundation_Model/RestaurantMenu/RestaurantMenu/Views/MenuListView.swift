@@ -9,10 +9,9 @@ import SwiftUI
 import FoundationModels
 
 struct MenuListView: View {
-    var menus: [DynamicMenu]
+    var menus: [RestaurantMenu.PartiallyGenerated]
 
     var body: some View {
-        let _ = print("MenuListView body called with \(menus.count) menus")
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 20) {
@@ -26,21 +25,21 @@ struct MenuListView: View {
                                 HStack {
                                     if let menuType = menu.type?.rawValue {
                                     Text(menuType)
-                                        .font(.headline)
+                                        .font(.title2)
                                         .foregroundColor(.primary)
                                     }
                                     Spacer()
                                     
                                     if let reataurantType = menu.restaurantType?.rawValue {
                                         Text(reataurantType)
-                                            .font(.subheadline)
+                                            .font(.title2)
                                             .foregroundColor(.secondary)
                                     }
                                 }
-                                .padding(.horizontal)
+                                .padding(.bottom)
                                 
-                                if !menu.menu.isEmpty {
-                                    ForEach(menu.menu, id: \.id) { item in
+                                if let menuItems = menu.menu, !menuItems.isEmpty {
+                                    ForEach(menuItems, id: \.id) { item in
                                         MenuItemView(menuItem: item)
                                     }
                                 } else {
@@ -64,6 +63,6 @@ struct MenuListView: View {
     }
 }
 
-//#Preview {
-//    MenuListView()
-//}
+    #Preview {
+        MenuListView(menus: [RestaurantMenu.mockRestaurantMenu.asPartiallyGenerated()])
+    }   

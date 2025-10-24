@@ -63,7 +63,7 @@ struct HomeView: View {
             .padding()
             .sheet(isPresented: $showMenuList) {
                 MenuListView(
-                    menus: viewModel.dynamicMenus
+                    menus: viewModel.menus
                 )
             }
             .navigationTitle("Create Your Menu")

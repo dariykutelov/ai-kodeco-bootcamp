@@ -9,47 +9,44 @@ import SwiftUI
 import FoundationModels
 
 struct MenuItemView: View {
-    var menuItem: MenuItem
+    var menuItem: MenuItem.PartiallyGenerated
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack() {
-                Text(menuItem.name)
+                Text(menuItem.name ?? "")
                     .foregroundStyle(.orange)
                     .fontWeight(.semibold)
                 
                 Spacer()
             
-       
-                Text(menuItem.cost, format: .currency(code: "EUR").locale(Locale(identifier: "en_US")))
+                if let menuItemCost = menuItem.cost {
+                    Text("€\(menuItemCost.formatted(.number.precision(.fractionLength(2))))")
                         .foregroundStyle(.indigo)
-            
+                }
             }
-            .font(.title2)
+            .font(.title3)
             
-            Text(menuItem.description)
+            Text(menuItem.description ?? "")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .font(.body)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-           
+            if let menuItemIngredients = menuItem.ingredients {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ingredients")
                         .font(.headline)
                         .foregroundStyle(.indigo)
-                    Text(menuItem.ingredients.joined(separator: " • "))
+                    Text(menuItemIngredients.joined(separator: " • "))
                         .font(.subheadline)
                 }
+            }
         }
+        .padding(.bottom)
     }
 }
 
-//#Preview {
-//    let item = MenuItem(
-//      name: "Caesar Salad",
-//      description: "Romaine lettuce tossed in Caesar dressing with parmesan cheese and croutons.",
-//      ingredients: ["romaine lettuce", "Caesar dressing", "parmesan cheese", "croutons"],
-//      cost: 10.0
-//    )
-//    MenuItemView(menuItem: item.asPartiallyGenerated())
-//}
+#Preview {
+
+    MenuItemView(menuItem: MenuItem.mockMenuItem.asPartiallyGenerated())
+}
