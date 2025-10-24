@@ -42,7 +42,7 @@ import Observation
     func generateMenus() async {
         menus.removeAll()
         
-        let instructions = """
+        let menuInstructions = """
         You are an expert chef and restaurant menu designer. Your task is to create authentic, appealing restaurant menus that match the specified meal type and restaurant style.
         
         Guidelines:
@@ -53,7 +53,8 @@ import Observation
         - Ensure all items are appropriate for the specified meal type (breakfast, lunch, or dinner)
         - Vary the dishes to create a balanced, diverse menu
         """
-        let session = LanguageModelSession(instructions: instructions)
+        
+        let menuSession = LanguageModelSession(instructions: menuInstructions)
         
         for restaurantType in selectedRestaurantTypes {
             for mealType in sortedMealTypes {
@@ -67,7 +68,7 @@ import Observation
                 """
                 
                 do {
-                    let streamedResponse = session.streamResponse(to: prompt, generating: RestaurantMenu.self)
+                    let streamedResponse = menuSession.streamResponse(to: prompt, generating: RestaurantMenu.self)
                     
                     var menuAdded = false
                     
@@ -85,6 +86,45 @@ import Observation
                     print("Error generating menu for \(restaurantType.rawValue) - \(mealType.rawValue): \(error.localizedDescription)")
                 }
             }
+        }
+        
+        await createShoppingListFromMenus()
+    }
+    
+    private func createShoppingListFromMenus() async {
+        let shoppingTool = AddToShoppingList()
+        let toolInstructions = """
+        You are a helpful assistant that analyzes restaurant menus and creates shopping lists.
+        Your job is to extract all unique ingredients from the provided menu and use the addReminder tool to create a shopping list for the user.
+        Be thorough and extract all ingredients mentioned.
+        """
+        
+        let toolSession = LanguageModelSession(tools: [shoppingTool], instructions: toolInstructions)
+        
+        var allIngredients: [String] = []
+        for menu in menus {
+            if let menuItems = menu.menu {
+                for item in menuItems {
+                    if let ingredients = item.ingredients {
+                        allIngredients.append(contentsOf: ingredients)
+                    }
+                }
+            }
+        }
+        
+        let uniqueIngredients = Array(Set(allIngredients))
+        
+        let analysisPrompt = """
+        I have generated restaurant menus with the following ingredients:
+        \(uniqueIngredients.joined(separator: ", "))
+        
+        Please create a shopping list reminder with all these unique ingredients so I can remember to buy them.
+        """
+        
+        do {
+            _ = try await toolSession.respond(to: analysisPrompt)
+        } catch {
+            print("Error creating shopping list: \(error.localizedDescription)")
         }
     }
 }
