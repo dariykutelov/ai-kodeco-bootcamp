@@ -18,15 +18,25 @@ struct ContentView: View {
             VStack {
                 TaskListView()
                 
-                if !viewModel.availableLanguages.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Translation Settings")
-                            .font(.headline)
-                            .padding(.horizontal)
+                if !viewModel.translationStatusMessage.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: viewModel.isDeviceLanguageSupported ? "exclamationmark.triangle.fill" : "xmark.circle.fill")
+                                .foregroundColor(viewModel.isDeviceLanguageSupported ? .orange : .red)
+                            Text("Translation Status")
+                                .font(.headline)
+                                .foregroundColor(viewModel.isDeviceLanguageSupported ? .orange : .red)
+                        }
                         
-                        LanguagePickersView()
-                            .padding(.horizontal)
+                        Text(viewModel.translationStatusMessage)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
                     }
+                    .padding()
+                    .background(viewModel.isDeviceLanguageSupported ? Color.orange.opacity(0.1) : Color.red.opacity(0.1))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
                 
                 Button {
@@ -42,6 +52,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .automatic) {
                     Button {
                         isAddTaskPresented.toggle()
+                        viewModel.translationStatusMessage = ""
                     } label: {
                         Label("Add task", systemImage: "plus")
                     }
@@ -61,13 +72,8 @@ struct ContentView: View {
     }
     
     private func translateAll() {
-        viewModel.identifyLanguage()
-        
         if configuration == nil {
-            configuration = .init(
-                source: viewModel.translateFrom,
-                target: viewModel.translateTo
-                )
+            configuration = .init()
             return
         }
         
@@ -75,32 +81,6 @@ struct ContentView: View {
     }
 }
 
-struct LanguagePickersView: View {
-    @Environment(ToDoTaskViewModel.self) private var viewModel: ToDoTaskViewModel
-    
-    var body: some View {
-        @Bindable var viewModel = viewModel
-        
-        VStack(spacing: 12) {
-            Picker("Source Language", selection: $viewModel.translateFrom) {
-                Text("Auto-detect").tag(nil as Locale.Language?)
-                ForEach(viewModel.availableLanguages) { language in
-                    Text(language.localizedName())
-                        .tag(Optional(language.locale))
-                }
-            }
-            .pickerStyle(.menu)
-            
-            Picker("Target Language", selection: $viewModel.translateTo) {
-                ForEach(viewModel.availableLanguages) { language in
-                    Text(language.localizedName())
-                        .tag(Optional(language.locale))
-                }
-            }
-            .pickerStyle(.menu)
-        }
-    }
-}
 
 #Preview {
     ContentView()
