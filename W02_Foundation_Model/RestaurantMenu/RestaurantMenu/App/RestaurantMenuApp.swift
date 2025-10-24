@@ -6,15 +6,20 @@
 //
 
 import SwiftUI
+import FoundationModels
 
 @main
 struct RestaurantMenuApp: App {
-    @State private var menuViewModel = MenuViewModel()
+    private let model = SystemLanguageModel.default
     
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .environment(menuViewModel)
+            switch model.availability {
+            case .available:
+                HomeView()
+            case .unavailable(let reason):
+                ModelUnavailableView(reason: reason)
+            }
         }
     }
 }

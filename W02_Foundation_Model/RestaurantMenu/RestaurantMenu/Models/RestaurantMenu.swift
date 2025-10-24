@@ -49,7 +49,7 @@ extension MenuItem {
         description: "Romaine lettuce tossed in Caesar dressing with parmesan cheese and croutons.",
         ingredients: ["romaine lettuce", "Caesar dressing", "parmesan cheese", "croutons"],
         cost: 10.0
-      )
+    )
 }
 
 extension RestaurantMenu {

@@ -59,6 +59,7 @@ struct HomeView: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.vertical)
                 .tint(.black)
+                .disabled(viewModel.isGenerating)
             }
             .padding()
             .sheet(isPresented: $showMenuList) {

@@ -16,7 +16,7 @@ struct MenuListView: View {
             ScrollView {
                 LazyVStack(spacing: 20) {
                     if menus.isEmpty {
-                        ProgressView("Generating menus...")
+                        ProgressView("Generating ...")
                             .font(.title2)
                             .padding()
                     } else {
@@ -57,7 +57,7 @@ struct MenuListView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Generated Menus")
+            .navigationTitle("Suggested Menus")
             .navigationBarTitleDisplayMode(.inline)
         }
     }

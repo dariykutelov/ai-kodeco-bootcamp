@@ -5,14 +5,14 @@ import EventKit
 
 struct AddToShoppingList: Tool {
     let name = "addReminder"
-    let description = "Add ingredients to the user's shopping list as a reminder. Use this tool after generating a menu to help the user remember what ingredients to buy."
-   
+    let description = "Add valid food ingredients to the user's shopping list as a reminder. Only include actual food items that can be purchased. Use this tool after analyzing the menu."
+    
     @Generable
     struct Arguments {
-      @Guide(description: "An array of ingredients needed to prepare the meals in the menu")
-      var ingredients: [String]
+        @Guide(description: "An array of valid food ingredients needed to prepare the meals. Only include actual edible food items, not non-food objects or invalid entries.")
+        var ingredients: [String]
     }
-
+    
     
     func call(arguments: Arguments) async throws -> String {
         let eventStore = EKEventStore()
