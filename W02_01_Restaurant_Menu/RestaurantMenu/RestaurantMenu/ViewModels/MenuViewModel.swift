@@ -19,9 +19,8 @@ import Observation
     
     private var sortedMealTypes: [MealType] {
         guard selectedMealTypes.count > 1 else { return Array(selectedMealTypes) }
-        let order: [MealType] = [.breakfast, .lunch, .dinner]
         return selectedMealTypes.sorted { mealType1, mealType2 in
-            order.firstIndex(of: mealType1) ?? 0 < order.firstIndex(of: mealType2) ?? 0
+            MealType.allCases.firstIndex(of: mealType1) ?? 0 < MealType.allCases.firstIndex(of: mealType2) ?? 0
         }
     }
     

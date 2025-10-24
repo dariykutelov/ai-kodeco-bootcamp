@@ -8,7 +8,7 @@
 import Foundation
 import FoundationModels
 
-@Generable(description: "Meal type for a restaurant menu. The type has predefined values - breakfast, lunch and dinner.")
+@Generable(description: "Meal type for a restaurant menu. The type has one of the predefined values - breakfast, lunch and dinner.")
 enum MealType: String, CaseIterable {
     case breakfast = "Breakfast"
     case lunch = "Lunch"
@@ -33,10 +33,10 @@ struct MenuItem: Identifiable {
 
 @Generable(description: "A menu of offerings for a restaurant for a single meal.")
 struct RestaurantMenu: Identifiable {
-    @Guide(description: "The type of meal this menu is for.")
+    @Guide(description: "The type of meal this menu is for. It has one of the pre-defined values - breakfast, lunch or dinner.")
     let type: MealType
     
-    @Guide(description: "The type of restaurant this menu is for.")
+    @Guide(description: "The type of restaurant this menu is for. The type has oen of the predefined values - Fine dining, Diner, Casual dining, Fast food, Buffet, Deli or Pub.")
     let restaurantType: RestaurantType
     
     @Guide(description: "A list of menu items, appropriate for the selected type of meal.", .count(4...8))
