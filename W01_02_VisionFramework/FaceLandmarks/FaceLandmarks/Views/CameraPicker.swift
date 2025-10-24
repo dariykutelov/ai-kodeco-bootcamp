@@ -27,20 +27,20 @@ struct CameraPicker: UIViewControllerRepresentable {
 
 class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     var parent: CameraPicker
-
+    
     init(parent: CameraPicker) {
         self.parent = parent
     }
-
+    
     func imagePickerController(_ picker: UIImagePickerController,
                                didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true, completion: nil)
-
+        
         if let uiImage = info[.originalImage] as? UIImage {
             parent.selectedImage = uiImage
         }
     }
-
+    
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
     }
