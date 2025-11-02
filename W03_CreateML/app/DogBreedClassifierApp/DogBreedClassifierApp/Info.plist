@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AntaFRi1VJSHOgv/hqzE6Q==BL0jeZLSLzPQGvEV</string>
+	<key>CLOUDINARY_API_KEY</key>
+	<string>163236278195132</string>
+	<key>CLOUDINARY_API_SECRET</key>
+	<string>V-gu_hVUM6bxql3TmkehWbZTC5A</string>
+	<key>CLOUDINARY_CLOUD_NAME</key>
+	<string>dariku</string>
+	<key>DOG_API_KEY</key>
+	<string>live_5TzP78XOIGNU9q47lULCtIBWbE69w7LM9rR49CWmWixuwuZTNL4xkUFSmGjeSu5A</string>
+</dict>
+</plist>

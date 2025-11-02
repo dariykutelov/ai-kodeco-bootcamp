@@ -8,11 +8,29 @@
 import SwiftUI
 
 struct ButtonView: View {
+    let iconName: String
+    let buttonText: String
+    let backgroundColor: Color
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack {
+            Image(systemName: iconName)
+                .font(.body)
+            Text(buttonText)
+                .font(.body)
+        }
+        .padding(12)
+        .accentColor(.white)
+        .background(backgroundColor)
+        .clipShape(RoundedRectangle(cornerRadius: 8,
+                   style: .continuous))
     }
 }
 
 #Preview {
-    ButtonView()
+    ButtonView(
+        iconName: "camera.fill",
+        buttonText: "Camera",
+        backgroundColor: .blue
+    )
 }
