@@ -11,7 +11,7 @@ import SwiftUI
 struct DogBreedClassifierAppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
     }
 }

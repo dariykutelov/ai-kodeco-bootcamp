@@ -6,13 +6,30 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9CBCE3822EB7E4EB008E4C01 /* Cloudinary in Frameworks */ = {isa = PBXBuildFile; productRef = 9CBCE3812EB7E4EB008E4C01 /* Cloudinary */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		9C5622012EAFAEAC007F10DC /* DogBreedClassifierApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogBreedClassifierApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9C5623152EB2AFCE007F10DC /* Exceptions for "DogBreedClassifierApp" folder in "DogBreedClassifierApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9C5622002EAFAEAC007F10DC /* DogBreedClassifierApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9C5622032EAFAEAC007F10DC /* DogBreedClassifierApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9C5623152EB2AFCE007F10DC /* Exceptions for "DogBreedClassifierApp" folder in "DogBreedClassifierApp" target */,
+			);
 			path = DogBreedClassifierApp;
 			sourceTree = "<group>";
 		};
@@ -23,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9CBCE3822EB7E4EB008E4C01 /* Cloudinary in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +83,7 @@
 			);
 			name = DogBreedClassifierApp;
 			packageProductDependencies = (
+				9CBCE3812EB7E4EB008E4C01 /* Cloudinary */,
 			);
 			productName = DogBreedClassifierApp;
 			productReference = 9C5622012EAFAEAC007F10DC /* DogBreedClassifierApp.app */;
@@ -94,6 +113,9 @@
 			);
 			mainGroup = 9C5621F82EAFAEAC007F10DC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9CBCE3802EB7E4EB008E4C01 /* XCRemoteSwiftPackageReference "cloudinary_ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9C5622022EAFAEAC007F10DC /* Products */;
 			projectDirPath = "";
@@ -256,6 +278,8 @@
 				DEVELOPMENT_TEAM = NV786K8W94;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogBreedClassifierApp/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera to capture a photo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +312,8 @@
 				DEVELOPMENT_TEAM = NV786K8W94;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogBreedClassifierApp/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera to capture a photo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -332,6 +358,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9CBCE3802EB7E4EB008E4C01 /* XCRemoteSwiftPackageReference "cloudinary_ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cloudinary/cloudinary_ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9CBCE3812EB7E4EB008E4C01 /* Cloudinary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9CBCE3802EB7E4EB008E4C01 /* XCRemoteSwiftPackageReference "cloudinary_ios" */;
+			productName = Cloudinary;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9C5621F92EAFAEAC007F10DC /* Project object */;
 }
