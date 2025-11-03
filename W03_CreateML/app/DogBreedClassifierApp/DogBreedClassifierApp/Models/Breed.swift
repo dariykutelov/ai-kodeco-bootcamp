@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Breed: Decodable {
+struct Breed: Decodable, Equatable {
     let imageLink: String
     let goodWithChildren: Int
     let goodWithOtherDogs: Int

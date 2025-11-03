@@ -34,15 +34,11 @@ class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationContro
     
     func imagePickerController(_ picker: UIImagePickerController,
                                didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        print("CameraPicker - imagePickerController didFinishPickingMediaWithInfo")
         picker.dismiss(animated: true, completion: nil)
         
         if let uiImage = info[.originalImage] as? UIImage {
-            print("CameraPicker - got image, size: \(uiImage.size)")
             DispatchQueue.main.async {
-                print("CameraPicker - setting selectedImage on main thread")
                 self.parent.selectedImage = uiImage
-                print("CameraPicker - selectedImage set")
             }
         } else {
             print("CameraPicker - no image in info dictionary")
@@ -50,7 +46,6 @@ class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationContro
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        print("CameraPicker - user cancelled")
         picker.dismiss(animated: true, completion: nil)
     }
 }

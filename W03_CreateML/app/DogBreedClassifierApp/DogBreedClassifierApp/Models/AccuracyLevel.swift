@@ -8,9 +8,9 @@
 import Foundation
 
 enum AccuracyLevel {
-    case high        // 85-100%
-    case medium      // 70-85%
-    case low         // <70%
+    case high
+    case medium
+    case low
     
     init(percentage: Float) {
         if percentage >= 85 {
