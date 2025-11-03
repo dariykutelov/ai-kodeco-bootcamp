@@ -27,6 +27,7 @@ import PhotosUI
     var accuracy: Float?
     var errorMessage: String?
     
+    
     // MARK: - Classify Image
     
     func classifyImage() {
@@ -35,11 +36,9 @@ import PhotosUI
             return
         }
         
-        print("classifyImage() - starting classification")
         Task {
             do {
                 let (breed, confidence) = try await classifier.classify(image: image)
-                print("Classification result - breed: \(breed ?? "nil"), confidence: \(confidence ?? -1)")
                 
                 await MainActor.run {
                     guard let breedName = breed else {
@@ -47,11 +46,9 @@ import PhotosUI
                         return
                     }
                     
-                    print("classifyImage() - setting breed: \(breedName), accuracy: \((confidence ?? 0) * 100.0)")
                     self.errorMessage = nil
                     self.dogBreed = Breeds(rawValue: breedName) ?? .unknown
                     self.accuracy = (confidence ?? 0) * 100.0
-                    print("classifyImage() - dogBreed: \(self.dogBreed), accuracy: \(self.accuracy ?? -1)")
                 }
             } catch {
                 print("classifyImage() - error: \(error.localizedDescription)")

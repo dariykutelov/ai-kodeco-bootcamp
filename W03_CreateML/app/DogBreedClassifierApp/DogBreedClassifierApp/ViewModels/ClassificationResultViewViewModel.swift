@@ -12,43 +12,40 @@ import UIKit
 import Cloudinary
 
 @Observable final class ClassificationResultViewViewModel {
+    
+    // MARK: - Properties
+    
     let breed: String
     var breedDetails: Breed?
     var errorMessage: String?
     var isUploading = false
+    var apiImage: UIImage?
     
     private var cloudinary: CLDCloudinary {
         let config = CLDConfiguration(cloudName: cloudinaryCloudName, apiKey: cloudinaryApiKey, apiSecret: cloudinaryApiSecret)
         return CLDCloudinary(configuration: config)
     }
     
+    
+    // MARK: - Init
+    
     init(breed: String) {
         self.breed = breed
-
+        
         Task {
             await fetchBreedDetails()
         }
     }
     
-    func confirmUpload(image: UIImage?, folder: String) {
-        guard let image = image else {
-            print("No image to upload")
-            return
-        }
-        
-        Task {
-            await uploadToCloudinary(image: image, folder: folder)
-        }
-    }
+    
+    // MARK: - Fetching breed details from api
     
     private func fetchBreedDetails() async {
         guard let breedName =  Breeds(rawValue: breed)?.apiBreedName,
-                let url = URL(string: "https://api.api-ninjas.com/v1/dogs?name=\(breedName)") else {
+              let url = URL(string: "https://api.api-ninjas.com/v1/dogs?name=\(breedName)") else {
             print("Invalid url")
             return
         }
-        
-        print(url.absoluteString)
         
         var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
@@ -61,32 +58,29 @@ import Cloudinary
             }
             
             let breeds = try JSONDecoder().decode([Breed].self, from: data)
-            self.breedDetails = breeds.first
-            print(self.breedDetails ?? "No breed found")
+            
+            if breeds.isEmpty {
+                self.errorMessage = "No breed details available"
+            } else {
+                let breed = breeds.first
+                await MainActor.run {
+                    self.apiImage = nil
+                    self.breedDetails = breed
+                }
+                
+                if let imageLink = breed?.imageLink, let url = URL(string: imageLink) {
+                    await MainActor.run {
+                        loadImage(from: url)
+                    }
+                }
+            }
         } catch {
-            print(error.localizedDescription)
             self.errorMessage = error.localizedDescription
         }
     }
     
-    private func resizeImageTo360x360(_ image: UIImage) -> UIImage {
-        let targetSize = CGSize(width: 360, height: 360)
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = 1.0
-        
-        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
-        
-        let resizedImage = renderer.image { context in
-            context.cgContext.interpolationQuality = .high
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-        
-        guard let cgImage = resizedImage.cgImage else {
-            return resizedImage
-        }
-        
-        return UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
-    }
+    
+    // MARK: - Upload user image to cloud for retraining the model
     
     private func uploadToCloudinary(image: UIImage, folder: String) async {
         await MainActor.run {
@@ -99,10 +93,7 @@ import Cloudinary
             }
         }
         
-        let resizedImage = resizeImageTo360x360(image)
-        if let cgImage = resizedImage.cgImage {
-            print("Resized image - Points: \(resizedImage.size), Pixels: \(cgImage.width)x\(cgImage.height), Scale: \(resizedImage.scale)")
-        }
+        let resizedImage = image.resizeTo360x360()
         
         guard let imageData = resizedImage.jpegData(compressionQuality: 0.8) else {
             print("Failed to convert image to data")
@@ -118,21 +109,59 @@ import Cloudinary
                 data: imageData,
                 params: params,
                 progress: nil
-            ) { response, error in
+            ) { _, error in
                 if let error = error {
                     print("Error uploading to Cloudinary: \(error.localizedDescription)")
-                } else if let response = response {
-                    print("Successfully uploaded to Cloudinary in folder: \(folder)")
-                    if let url = response.secureUrl {
-                        print("Image URL: \(url)")
-                    }
                 }
+                
                 continuation.resume()
             }
         }
     }
     
+    
+    // MARK: - Loading breed reference image
+    
+    func loadImage(from url: URL) {
+        Task {
+            await MainActor.run {
+                self.apiImage = nil
+            }
+            do {
+                var request = URLRequest(url: url)
+                request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15", forHTTPHeaderField: "User-Agent")
+                request.timeoutInterval = 30.0
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse,
+                      httpResponse.statusCode == 200,
+                      let image = UIImage(data: data) else {
+                    return
+                }
+                
+                await MainActor.run {
+                    self.apiImage = image
+                }
+            } catch {
+                return
+            }
+        }
+    }
+    
+    
     // MARK: - Helper Methods
+    
+    func confirmUpload(image: UIImage?, folder: String) {
+        guard let image = image else {
+            print("No image to upload")
+            return
+        }
+        
+        Task {
+            await uploadToCloudinary(image: image, folder: folder)
+        }
+    }
     
     private var apiKey: String {
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String else {

@@ -10,10 +10,10 @@ import PhotosUI
 
 struct HomeView: View {
     @State private var viewModel = HomeViewViewModel()
-    
     @State private var showCameraPicker = false
     @State private var showClassificationResult = false
     @State private var shouldOpenCameraAfterPermission = false
+    @State private var pendingClassificationResult = false
     
     var body: some View {
         NavigationStack {
@@ -31,9 +31,9 @@ struct HomeView: View {
                 
                 Spacer()
                 
+                // MARK: Error Message Text
                 if let errorMessage = viewModel.errorMessage {
                     VStack(spacing: 30) {
-                        // MARK: Error Message Text
                         HStack {
                             Text(errorMessage)
                                 .font(.body)
@@ -54,11 +54,9 @@ struct HomeView: View {
                         print("Camera button tapped. Permission status: \(viewModel.cameraPermissionStatus.rawValue)")
                         switch viewModel.cameraPermissionStatus {
                         case .authorized:
-                            print("Camera authorized - resetting and showing picker")
                             viewModel.reset()
                             showCameraPicker = true
                         case .notDetermined:
-                            print("Camera permission not determined - requesting")
                             shouldOpenCameraAfterPermission = true
                             viewModel.requestCameraPermissions()
                         default:
@@ -90,31 +88,39 @@ struct HomeView: View {
             }
             .navigationTitle("What's This Breed?")
             .onAppear {
-                print("HomeView - onAppear - checking camera permissions")
                 viewModel.checkCameraPermissions()
             }
             .onChange(of: viewModel.selectedImage) { oldValue, newValue in
-                print("selectedImage changed - old: \(oldValue != nil), new: \(newValue != nil)")
                 if viewModel.selectedImage != nil {
-                    print("selectedImage is not nil - resetting modal and calling classifyImage()")
                     showClassificationResult = false
                     viewModel.classifyImage()
                 }
             }
             .onChange(of: viewModel.accuracy) { oldValue, newValue in
-                print("accuracy changed - old: \(oldValue ?? -1), new: \(newValue ?? -1), breed: \(viewModel.dogBreed)")
                 if viewModel.dogBreed != .unknown && newValue != nil {
-                    print("Showing classification result modal")
-                    showClassificationResult = true
+                    if showCameraPicker {
+                        pendingClassificationResult = true
+                    } else {
+                        showClassificationResult = true
+                    }
                 }
             }
             .onChange(of: viewModel.cameraPermissionStatus) { oldValue, newValue in
-                print("Camera permission status changed: \(oldValue.rawValue) -> \(newValue.rawValue)")
                 if newValue == .authorized && shouldOpenCameraAfterPermission {
-                    print("Camera authorized after request - opening camera")
                     shouldOpenCameraAfterPermission = false
                     viewModel.reset()
                     showCameraPicker = true
+                }
+            }
+            .onChange(of: showCameraPicker) { oldValue, newValue in
+                if !newValue && pendingClassificationResult {
+                    pendingClassificationResult = false
+                    Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000)
+                        await MainActor.run {
+                            showClassificationResult = true
+                        }
+                    }
                 }
             }
             .sheet(isPresented: $showCameraPicker) {
