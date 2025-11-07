@@ -2,11 +2,9 @@ import torch
 import coremltools as ct
 import json
 
-print("🔹 Loading pretrained ResNet50...")
 pt_model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet50', pretrained=True)
 pt_model.eval()
 
-print("🔹 Loading ImageNet labels...")
 with open("imagenet_labels.json", "r") as f:
     labels = json.load(f)
 
