@@ -13,7 +13,6 @@ import PhotosUI
     
     // MARK: - Properties
     
-    var imageClassifier: ImageClassifier?
     var selectedImage: UIImage?
     var selectedPickerItem: PhotosPickerItem? {
         didSet {
@@ -23,7 +22,7 @@ import PhotosUI
         }
     }
     var errorMessage: String? = nil
-    var selectedModel: SelectedModel = .ResNet50
+    var selectedModel: SelectedModel = .yolov8x_cls_converted
     var classificationResult: (label: String, probability: Float)?
     var isClassifying: Bool = false
     private var classificationWorkItem: DispatchWorkItem?
@@ -58,6 +57,7 @@ import PhotosUI
     func classifyImage() {
         classificationWorkItem?.cancel()
         errorMessage = nil
+        
         guard let image = selectedImage else {
             classificationWorkItem = nil
             classificationResult = nil
@@ -67,6 +67,7 @@ import PhotosUI
             }
             return
         }
+        
         let model = selectedModel
         classificationResult = nil
         isClassifying = true
@@ -81,10 +82,10 @@ import PhotosUI
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 guard self.classificationIdentifier == identifier else { return }
-                self.imageClassifier = classifier
                 self.classificationResult = result
                 self.isClassifying = false
                 self.classificationWorkItem = nil
+                
                 if result == nil {
                     self.errorMessage = "Unable to classify image."
                 } else {
@@ -92,8 +93,8 @@ import PhotosUI
                 }
             }
         }
-        classificationWorkItem = workItem
         
+        classificationWorkItem = workItem
         DispatchQueue.global(qos: .userInitiated).async(execute: workItem)
     }
     
