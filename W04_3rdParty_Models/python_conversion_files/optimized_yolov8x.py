@@ -3,8 +3,6 @@ from ultralytics import YOLO
 import coremltools as ct
 import coremltools.optimize as cto
 
-
-
 # Export YOLOv8 classification model → CoreML FP32
 print("🔹 Exporting YOLOv8x classification model → CoreML FP32...")
 
@@ -20,7 +18,6 @@ fp32_path = "yolov8x-cls.mlpackage"
 print(f"✅ Exported FP32 model: {fp32_path}\n")
 
 model_fp32 = ct.models.MLModel(fp32_path)
-
 
 # Apply INT8 weight quantization
 print("🔹 Applying 8-bit Linear Quantization (CoreMLTools 7+)...")
@@ -39,7 +36,6 @@ int8_path = "yolov8x-cls-int8.mlpackage"
 model_int8.save(int8_path)
 
 print(f"✅ Saved INT8 quantized model: {int8_path}\n")
-
 
 # Show model sizes
 def model_size(path):
