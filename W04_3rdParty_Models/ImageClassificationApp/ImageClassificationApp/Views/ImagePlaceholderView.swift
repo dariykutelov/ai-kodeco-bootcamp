@@ -21,10 +21,10 @@ struct ImagePlaceholderView: View {
             .aspectRatio(1, contentMode: .fit)
             .overlay(alignment: .bottom) {
                 VStack(spacing: 2) {
-                    Text("Select a photo with a dog")
+                    Text("Select a photo")
                         .font(.title3)
                         .fontWeight(.bold)
-                    Text("Keep the dog as the main focus, avoid clutter")
+                    Text("Use the image icon in the top right corner")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
