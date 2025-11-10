@@ -17,7 +17,7 @@ class GPTService {
   private let decoder: JSONDecoder
   private let urlSession: URLSession
   
-  init(apiKey: String = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "MISSING API KEY",
+  init(apiKey: String = Secrets.openAIKey,
        model: GPTModelVersion,
        context: [Message] = [],
        urlSession: URLSession = .shared) {
@@ -31,6 +31,8 @@ class GPTService {
     self.decoder = decoder
     
     self.encoder = JSONEncoder()
+      
+      
   }
   
   private func requestFor(url: URL, httpMethod: String, httpBody: Data?) -> URLRequest {
