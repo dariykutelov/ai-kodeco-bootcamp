@@ -8,29 +8,34 @@
 import Foundation
 
 enum GPTClientError: Error, CustomStringConvertible {
-  case errorResponse(statusCode: Int, error: GPTErrorResponse?)
-  case networkError(message: String? = nil, error: Error? = nil)
-  
-  var description: String {
-    switch self {
-    case .errorResponse(let statusCode, let error):
-      return "GPTClientError.errorResponse: statusCode: \(statusCode), " +
-      "error: \(String(describing: error))"
-      
-    case .networkError(let message, let error):
-      return "GPTClientError.networkError: message: \(String(describing: message)), " +
-      "error: \(String(describing: error))"
+    // include optional raw body so non-decodable error payloads are visible
+    case errorResponse(statusCode: Int, error: GPTErrorResponse?, body: String?)
+    case networkError(message: String? = nil, error: Error? = nil)
+    case errorSummarizeChat(errorMessage: String? = nil)
+    
+    var description: String {
+        switch self {
+        case .errorResponse(let statusCode, let error, let body):
+            return "GPTClientError.errorResponse: statusCode: \(statusCode), " +
+            "error: \(error?.error.message ?? body ?? "unknown")"
+            
+        case .networkError(let message, let error):
+            return "GPTClientError.networkError: message: \(String(describing: message)), " +
+            "error: \(String(describing: error))"
+            
+        case .errorSummarizeChat(let errorMessage):
+            return "GPTClientError.errorSummarizeChat: error: \(errorMessage ?? "unknown")"
+        }
     }
-  }
 }
 
 struct GPTErrorResponse: Codable {
-  let error: ErrorDetail
-  
-  struct ErrorDetail: Codable {
-    let message: String
-    let type: String
-    let param: String?
-    let code: String?
-  }
+    let error: ErrorDetail
+    
+    struct ErrorDetail: Codable {
+        let message: String
+        let type: String
+        let param: String?
+        let code: String?
+    }
 }

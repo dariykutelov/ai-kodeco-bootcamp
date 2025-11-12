@@ -9,11 +9,14 @@ import Foundation
 
 struct GPTChatRequest: Codable {
     let model: GPTModelVersion
-    let messages: [Message]
+    let input: [Message]
+    let stream: Bool
     
     init(model: GPTModelVersion,
-         messages: [Message]) {
+         messages: [Message],
+         stream: Bool = false) {
         self.model = model
-        self.messages = messages
+        self.input = messages
+        self.stream = stream
     }
 }

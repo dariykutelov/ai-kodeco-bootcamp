@@ -9,7 +9,6 @@ import SwiftUI
 struct Message: Codable, Hashable {
     let role: Role
     let content: String
-    let timestamp: Date?
     
     enum Role: String, Codable {
         case assistant

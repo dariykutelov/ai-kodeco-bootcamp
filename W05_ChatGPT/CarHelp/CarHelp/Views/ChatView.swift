@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ChatView: View {
-    @State private var viewModel = ChatViewViewModel()
+    @State private var viewModel = ChatViewViewModel(model: .gpt41mini)
     
     var body: some View {
         NavigationView {
             VStack {
+                // TODO: - Scroll with the text generation
                 ScrollView {
                     VStack(spacing: 10) {
                         ForEach(viewModel.messages, id: \.self) { message in
@@ -34,7 +35,7 @@ struct ChatView: View {
                     }
                     .padding()
                 }
-                InputMessageView(inputText: $viewModel.inputText, isLoading: $viewModel.isLoading, sendMessage: viewModel.sendMessage)
+                InputMessageView(inputText: $viewModel.userInput, isLoading: $viewModel.isLoading, sendMessage: viewModel.sendMessage)
             }
             .navigationTitle("Help Desk Chat")
             .navigationBarTitleDisplayMode(.inline)
