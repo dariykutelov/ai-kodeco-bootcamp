@@ -10,6 +10,9 @@ import Observation
 
 @MainActor
 @Observable final class ChatViewViewModel {
+    
+    // MARK: - Properties
+    
     let model: GPTModelVersion
     var service: GPTService
     var messages: [Message] = [
@@ -17,12 +20,17 @@ import Observation
     ]
     var userInput: String = "I have a Lexus NX300, 2014 model. The check engine light is on. What should I do?"
     var isLoading = false
-    var isStreaming = false
+    
+    
+    // MARK: - Initializer
     
     init(model: GPTModelVersion = .gpt41mini) {
         self.model = model
         self.service = GPTService(model: model)
     }
+    
+    
+    // MARK: - Methods: Send Message
     
     func sendMessage() {
         guard !userInput.isEmpty else { return }
@@ -35,23 +43,23 @@ import Observation
     }
     
     private func handleSendMessage(input: String) async {
+        isLoading = true
+        
         let shouldSummarize = estimatedContextTokenCount() > Double(model.contextTresouldLimit)
-        print("Estimated token count: \(estimatedContextTokenCount()), model token \(model.contextTresouldLimit), should summarize: \(shouldSummarize)")
+
         if shouldSummarize {
             await summarizeChatHistory()
         }
         
         let userMessage = Message(role: .user, content: input)
-        isLoading = true
-        isStreaming = true
         messages.append(userMessage)
-        userInput.removeAll()
+        userInput = ""
+    
         let requestMessages = messages
         messages.append(Message(role: .assistant, content: ""))
         let assistantIndex = messages.count - 1
-        
         let context: [Message] = ContextType.initial.chatContext
-        let stream = service.streamChats(context: context, messages: requestMessages)
+        let stream = service.streamChat(context: context, messages: requestMessages)
         
         do {
             for try await partial in stream {
@@ -59,17 +67,16 @@ import Observation
             }
             
             isLoading = false
-            isStreaming = false
         } catch {
             messages[assistantIndex] = Message(role: .assistant, content: "An error occurred. Please try again.")
             isLoading = false
-            isStreaming = false
         }
     }
     
+    
+    // MARK: - Methods: Summarize Chat History
+    
     private func summarizeChatHistory() async {
-        isLoading = true
-        
         let context: [Message] = ContextType.summarize.chatContext
         let existingMessages = messages
         
@@ -81,14 +88,14 @@ import Observation
                 return
             }
             messages = [Message(role: .system, content: summaryText)]
-            print("Summary: \(summaryText)")
-            isLoading = false
         } catch {
-            isLoading = false
             print("\(error.localizedDescription)")
         }
     }
 
+    
+    // MARK: - Helper Methods
+    
     private func estimatedContextTokenCount() -> Double {
         let contextWords = ContextType.initial.chatContext.reduce(0) { $0 + wordCount(for: $1.content) }
         let messageWords = messages.reduce(0) { $0 + wordCount(for: $1.content) }

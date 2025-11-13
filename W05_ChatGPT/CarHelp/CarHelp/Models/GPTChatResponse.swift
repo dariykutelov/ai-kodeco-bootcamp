@@ -7,7 +7,8 @@
 
 import Foundation
 
-// TODO: - Change naming for non streaming response
+// MARK: - Non Streaming Response
+
 struct GPTChatResponse: Codable {
     struct OutputItem: Codable {
         struct Content: Codable {
@@ -60,5 +61,34 @@ struct GPTChatResponse: Codable {
         case model
         case output
         case usage
+    }
+}
+
+
+// MARK: - Streaming Response
+
+struct GPTChatStreamResponse: Codable {
+    let type: String
+    let sequenceNumber: Int?
+    let response: GPTChatResponse?
+    let outputIndex: Int?
+    let item: GPTChatResponse.OutputItem?
+    let itemID: String?
+    let contentIndex: Int?
+    let part: GPTChatResponse.OutputItem.Content?
+    let delta: String?
+    let error: GPTErrorResponse?
+    
+    enum CodingKeys: String, CodingKey {
+        case type
+        case sequenceNumber = "sequence_number"
+        case response
+        case outputIndex = "output_index"
+        case item
+        case itemID = "item_id"
+        case contentIndex = "content_index"
+        case part
+        case delta
+        case error
     }
 }

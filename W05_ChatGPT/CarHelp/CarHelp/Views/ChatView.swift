@@ -35,13 +35,16 @@ struct ChatView: View {
                     }
                     .padding()
                 }
-                InputMessageView(inputText: $viewModel.userInput, isLoading: $viewModel.isLoading, sendMessage: viewModel.sendMessage)
+                InputMessageView(inputText: $viewModel.userInput, isLoading: $viewModel.isLoading,
+                                 sendMessage: viewModel.sendMessage)
             }
             .navigationTitle("Help Desk Chat")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: Button("New") {
-                viewModel.messages = viewModel.messages.count > 0 ? [viewModel.messages[0]] : []
-            }.disabled(viewModel.messages.count < 2))
+            .navigationBarItems(
+                trailing: Button("New") {
+                    viewModel.messages = viewModel.messages.count > 0 ? [viewModel.messages[0]] : []
+                }.disabled(viewModel.messages.count < 2)
+            )
         }
     }
 }
