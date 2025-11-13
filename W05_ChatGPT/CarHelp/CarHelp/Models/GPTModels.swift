@@ -17,7 +17,7 @@ enum GPTModelVersion: String, Codable {
     /// Training data is up to Dec 2023
     case gpt4Turbo = "gpt-4-turbo"
     
-    /// Training data is up to Apr 2024
+    /// Training data is up to May 2024
     case gpt41mini = "gpt-4.1-mini"
     
     var contextTresouldLimit: Int {

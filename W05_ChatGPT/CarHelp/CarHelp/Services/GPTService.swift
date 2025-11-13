@@ -44,7 +44,12 @@ class GPTService {
         return AsyncThrowingStream { continuation in
             Task {
                 do {
-                    let chatRequest = GPTChatRequest(model: model, messages: context + messages, stream: true)
+                    let chatRequest = GPTChatRequest(
+                        model: model,
+                        messages: context + messages,
+                        stream: true,
+                        tools: [GPTChatRequest.Tool(type: "web_search")]
+                    )
                     let body = try encoder.encode(chatRequest)
                     let request = requestFor(url: endpoint, httpMethod: "POST", httpBody: body)
                     let (bytes, response) = try await URLSession.shared.bytes(for: request)
@@ -119,7 +124,10 @@ class GPTService {
                                oldMessages: [Message]) async throws -> GPTChatResponse {
         
         do {
-            let chatRequest = GPTChatRequest(model: model, messages: context + oldMessages, stream: false)
+            let chatRequest = GPTChatRequest(model: model,
+                                             messages: context + oldMessages,
+                                             stream: false,
+                                             tools: [])
             let data = try encoder.encode(chatRequest)
             let request = requestFor(url: endpoint, httpMethod: "POST", httpBody: data)
             let (responseData, urlResponse) = try await urlSession.data(for: request)
