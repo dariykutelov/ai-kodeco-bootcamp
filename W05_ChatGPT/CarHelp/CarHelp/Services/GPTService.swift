@@ -21,13 +21,19 @@ class GPTService {
     
     // MARK: - Initializer
     
-    init(apiKey: String = Secrets.openAIKey,
+    init(
+        //apiKey: String = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "",
+        apiKey: String = Secrets.openAIKey,
          model: GPTModelVersion,
          context: [Message] = [],
          urlSession: URLSession = .shared) {
         self.apiKey = apiKey
         self.model = model
         self.urlSession = urlSession
+        
+        guard !apiKey.isEmpty else {
+            fatalError("Missing OPENAI_API_KEY")
+        }
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
@@ -173,7 +179,7 @@ class GPTService {
             if trimmed == "[DONE]" { continue }
             if let chunk = trimmed.data(using: .utf8) {
                 errorData.append(chunk)
-            }
+        }
         }
         let errorResponse = try? decoder.decode(GPTErrorResponse.self, from: errorData)
         let bodyString = errorData.isEmpty ? nil : String(data: errorData, encoding: .utf8)

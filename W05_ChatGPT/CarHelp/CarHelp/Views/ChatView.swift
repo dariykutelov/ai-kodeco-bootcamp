@@ -25,7 +25,7 @@ struct ChatView: View {
                                     .cornerRadius(10)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             } else {
-                                Text(message.content)
+                                Text(LocalizedStringKey(message.content))
                                     .padding()
                                     .background(Color.gray.opacity(0.1))
                                     .cornerRadius(10)
@@ -35,7 +35,10 @@ struct ChatView: View {
                     }
                     .padding()
                 }
-                InputMessageView(inputText: $viewModel.userInput, isLoading: $viewModel.isLoading,
+                
+                // MARK: Input Message View
+                InputMessageView(inputText: $viewModel.userInput,
+                                 isLoading: $viewModel.isLoading,
                                  sendMessage: viewModel.sendMessage)
             }
             .navigationTitle("Help Desk Chat")

@@ -46,7 +46,7 @@ import Observation
         isLoading = true
         
         let shouldSummarize = estimatedContextTokenCount() > Double(model.contextTresouldLimit)
-
+        
         if shouldSummarize {
             await summarizeChatHistory()
         }
@@ -54,7 +54,7 @@ import Observation
         let userMessage = Message(role: .user, content: input)
         messages.append(userMessage)
         userInput = ""
-    
+        
         let requestMessages = messages
         messages.append(Message(role: .assistant, content: ""))
         let assistantIndex = messages.count - 1
@@ -92,7 +92,7 @@ import Observation
             print("\(error.localizedDescription)")
         }
     }
-
+    
     
     // MARK: - Helper Methods
     

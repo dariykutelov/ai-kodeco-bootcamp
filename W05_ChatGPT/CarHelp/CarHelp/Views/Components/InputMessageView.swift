@@ -8,27 +8,30 @@
 import SwiftUI
 
 struct InputMessageView: View {
-  @Binding var inputText: String
-  @Binding var isLoading: Bool
-  let sendMessage: () -> Void
-
+    @Binding var inputText: String
+    @Binding var isLoading: Bool
+    let sendMessage: () -> Void
+    
     var body: some View {
-          HStack {
+        HStack {
+            // MARK: - Input TextField
             TextField("Type your message...", text: $inputText, axis: .vertical)
-              .textFieldStyle(RoundedBorderTextFieldStyle())
-              .padding()
-            
-            if isLoading {
-              ProgressView()
+                .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
+            
+            // MARK: - Loading Indicator
+            if isLoading {
+                ProgressView()
+                    .padding()
             }
             
+            //MARK: - Submit Button
             Button(action: sendMessage) {
-              Text("Submit")
+                Text("Submit")
             }
             .disabled(inputText.isEmpty || isLoading)
             .padding()
-          }
+        }
     }
 }
 
