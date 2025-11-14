@@ -13,24 +13,11 @@ struct ChatView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // TODO: - Scroll with the text generation
+                // MARK: Messages List View
                 ScrollView {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         ForEach(viewModel.messages, id: \.self) { message in
-                            if (message.role == .user) {
-                                Text(message.content)
-                                    .padding()
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(10)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                            } else {
-                                Text(LocalizedStringKey(message.content))
-                                    .padding()
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(10)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
+                            MessageBubbleView(message: message)
                         }
                     }
                     .padding()
@@ -39,6 +26,8 @@ struct ChatView: View {
                 // MARK: Input Message View
                 InputMessageView(inputText: $viewModel.userInput,
                                  isLoading: $viewModel.isLoading,
+                                 selectedPickerItem: $viewModel.selectedPickerItem,
+                                 selectedImage: $viewModel.selectedImage,
                                  sendMessage: viewModel.sendMessage)
             }
             .navigationTitle("Help Desk Chat")
@@ -51,6 +40,9 @@ struct ChatView: View {
         }
     }
 }
+
+
+
 
 #Preview {
     ChatView()

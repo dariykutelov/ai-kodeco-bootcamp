@@ -30,7 +30,7 @@ enum GPTModelVersion: String, Codable {
             return 128000
         case .gpt41mini:
             //return 262144
-            return 100
+            return 100 // Using 100k for testing purposes, it will summarize on the second message
         }
         
     }

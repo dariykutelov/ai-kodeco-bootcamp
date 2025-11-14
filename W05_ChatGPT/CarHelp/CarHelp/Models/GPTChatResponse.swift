@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 // MARK: - Non Streaming Response
 
 struct GPTChatResponse: Codable {
@@ -19,7 +20,7 @@ struct GPTChatResponse: Codable {
         let id: String
         let type: String
         let status: String?
-        let role: Message.Role?
+        let role: Role?
         let content: [Content]
     }
     

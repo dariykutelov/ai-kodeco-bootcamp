@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import PhotosUI
 
 @MainActor
 @Observable final class ChatViewViewModel {
@@ -18,8 +19,26 @@ import Observation
     var messages: [Message] = [
         Message(role: .assistant, content: "Hello, how can I help you today?")
     ]
-    var userInput: String = "I have a Lexus NX300, 2014 model. The check engine light is on. What should I do?"
+    var userInput: String = ""
+    var selectedImage: UIImage? {
+        didSet {
+            if let image = selectedImage {
+                selectedImageDataURL = prepareImageDataURL(from: image)
+            } else {
+                selectedImageDataURL = nil
+            }
+        }
+    }
+    private var selectedImageDataURL: String?
+    var selectedPickerItem: PhotosPickerItem? {
+        didSet {
+            if let item = selectedPickerItem {
+                loadImage(from: item)
+            }
+        }
+    }
     var isLoading = false
+    var errorMessage: String? = nil
     
     
     // MARK: - Initializer
@@ -33,7 +52,7 @@ import Observation
     // MARK: - Methods: Send Message
     
     func sendMessage() {
-        guard !userInput.isEmpty else { return }
+        guard !userInput.isEmpty || selectedImageDataURL != nil else { return }
         
         let input = userInput
         
@@ -51,11 +70,31 @@ import Observation
             await summarizeChatHistory()
         }
         
-        let userMessage = Message(role: .user, content: input)
+        let hasImageAttachment = selectedImageDataURL != nil
+        let userMessage: Message
+        if let imageDataURL = selectedImageDataURL {
+            userMessage = Message.withImage(
+                role: .user,
+                text: input.isEmpty ? nil : input,
+                imageUrl: imageDataURL
+            )
+        } else {
+            userMessage = Message(role: .user, content: input)
+        }
         messages.append(userMessage)
         userInput = ""
+        selectedImage = nil
+        selectedPickerItem = nil
         
-        let requestMessages = messages
+        var requestMessages = messages
+        if hasImageAttachment {
+            requestMessages.append(
+                Message(
+                    role: .system,
+                    content: "The previous user message includes an attached vehicle photo. Analyze the image for visible car damages or issues and include those observations in your response."
+                )
+            )
+        }
         messages.append(Message(role: .assistant, content: ""))
         let assistantIndex = messages.count - 1
         let context: [Message] = ContextType.initial.chatContext
@@ -97,8 +136,8 @@ import Observation
     // MARK: - Helper Methods
     
     private func estimatedContextTokenCount() -> Double {
-        let contextWords = ContextType.initial.chatContext.reduce(0) { $0 + wordCount(for: $1.content) }
-        let messageWords = messages.reduce(0) { $0 + wordCount(for: $1.content) }
+        let contextWords = ContextType.initial.chatContext.reduce(0) { $0 + wordCount(for: $1.content.textValue) }
+        let messageWords = messages.reduce(0) { $0 + wordCount(for: $1.content.textValue) }
         let inputWords = wordCount(for: userInput)
         let totalWords = contextWords + messageWords + inputWords
         return Double(totalWords) * 0.75
@@ -106,6 +145,51 @@ import Observation
     
     private func wordCount(for text: String) -> Int {
         text.split { $0.isWhitespace || $0.isNewline }.count
+    }
+    
+    
+    //MARK: - Load Image from PhotosPickerItem
+    
+    private func loadImage(from item: PhotosPickerItem) {
+        item.loadTransferable(type: Data.self) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data):
+                    if let data = data, let uiImage = UIImage(data: data) {
+                        self.selectedImage = uiImage
+                        self.errorMessage = nil
+                    } else {
+                        self.selectedImage = nil
+                        self.errorMessage = "Unable to decode selected image."
+                    }
+                case .failure(let error):
+                    self.selectedImage = nil
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    private func prepareImageDataURL(from image: UIImage) -> String? {
+        let maxDimension: CGFloat = 512
+        let resizedImage = resizeImage(image, maxDimension: maxDimension)
+        guard let jpegData = resizedImage.jpegData(compressionQuality: 0.7) else {
+            return nil
+        }
+        let base64 = jpegData.base64EncodedString()
+        return "data:image/jpeg;base64,\(base64)"
+    }
+    
+    private func resizeImage(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let size = image.size
+        let aspect = min(maxDimension / max(size.width, 1), maxDimension / max(size.height, 1))
+        if aspect >= 1 { return image }
+        let newSize = CGSize(width: size.width * aspect, height: size.height * aspect)
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage ?? image
     }
 }
 

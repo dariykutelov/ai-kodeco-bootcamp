@@ -22,30 +22,28 @@ class GPTService {
     // MARK: - Initializer
     
     init(
-        //apiKey: String = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "",
-        apiKey: String = Secrets.openAIKey,
-         model: GPTModelVersion,
-         context: [Message] = [],
-         urlSession: URLSession = .shared) {
-        self.apiKey = apiKey
-        self.model = model
-        self.urlSession = urlSession
-        
-        guard !apiKey.isEmpty else {
-            fatalError("Missing OPENAI_API_KEY")
+        apiKey: String = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "",
+        model: GPTModelVersion,
+        context: [Message] = [],
+        urlSession: URLSession = .shared) {
+            self.apiKey = apiKey
+            self.model = model
+            self.urlSession = urlSession
+            
+            guard !apiKey.isEmpty else {
+                fatalError("Missing OPENAI_API_KEY")
+            }
+            
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .secondsSince1970
+            self.decoder = decoder
+            self.encoder = JSONEncoder()
+            self.endpoint = URL(string: "https://api.openai.com/v1/responses")!
         }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .secondsSince1970
-        self.decoder = decoder
-        self.encoder = JSONEncoder()
-        self.endpoint = URL(string: "https://api.openai.com/v1/responses")!
-    }
     
     
     // MARK: - Methods: Stream Chats
     
-    // TODO: - Add web support
     func streamChat(context: [Message], messages: [Message]) -> AsyncThrowingStream<String, Error> {
         return AsyncThrowingStream { continuation in
             Task {
@@ -95,7 +93,7 @@ class GPTService {
             if trimmed == "[DONE]" { break }
             
             guard let chunkData = trimmed.data(using: .utf8) else { continue }
-    
+            
             let event: GPTChatStreamResponse
             
             do {
@@ -179,7 +177,7 @@ class GPTService {
             if trimmed == "[DONE]" { continue }
             if let chunk = trimmed.data(using: .utf8) {
                 errorData.append(chunk)
-        }
+            }
         }
         let errorResponse = try? decoder.decode(GPTErrorResponse.self, from: errorData)
         let bodyString = errorData.isEmpty ? nil : String(data: errorData, encoding: .utf8)

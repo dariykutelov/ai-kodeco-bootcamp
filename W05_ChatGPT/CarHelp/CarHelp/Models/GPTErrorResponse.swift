@@ -8,7 +8,6 @@
 import Foundation
 
 enum GPTClientError: Error, CustomStringConvertible {
-    // include optional raw body so non-decodable error payloads are visible
     case errorResponse(statusCode: Int, error: GPTErrorResponse?, body: String?)
     case networkError(message: String? = nil, error: Error? = nil)
     case errorSummarizeChat(errorMessage: String? = nil)
